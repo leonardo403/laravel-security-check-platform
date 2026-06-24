@@ -1,0 +1,112 @@
+#Criar docker-compose.yml simplificado para MVP
+version: '3.8'
+
+services:
+  #App Laravel
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: security-app
+    restart: unless-stopped
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - DB_DATABASE=security_mvp
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - REDIS_HOST=redis
+    volumes:
+      - .:/var/www
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - mvp-network
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: security-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - mvp-network
+
+  # MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: security-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: security_mvp
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - mvp-network
+
+  # Redis para Jobs
+  redis:
+    image: redis:alpine
+    container_name: security-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - mvp-network
+
+  # Worker para Jobs
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: security-worker
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - DB_DATABASE=security_mvp
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - REDIS_HOST=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - mvp-network
+
+  # Prometheus para métricas
+  prometheus:
+    image: prom/prometheus
+    container_name: security-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - mvp-network
+
+  # Grafana para dashboards
+  grafana:
+    image: grafana/grafana
+    container_name: security-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - mvp-network
+
+networks:
+  mvp-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+EOF

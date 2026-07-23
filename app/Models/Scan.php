@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Scan extends Model
 {
     protected $fillable = [
-        'user_id', 'repository_url', 'branch', 'status', 'priority', 'completed_at'
+        'user_id', 'repository_url', 'branch', 'scan_type', 'env_file_path',
+        'project_upload_path', 'status', 'progress', 'priority', 'completed_at'
     ];
 
     protected $casts = [
         'completed_at' => 'datetime',
+        'progress' => 'integer',
     ];
 
     public function user(): BelongsTo

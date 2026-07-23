@@ -1,34 +1,50 @@
-cat > docker/Dockerfile << 'EOF'
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
-# Instalar dependências
+
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    unzip \
+    zip \
+    libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    zip \
-    unzip \
-    nodejs \
-    npm \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
-# Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configurar diretório de trabalho
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /var/www
 
-# Copiar código
+#RUN chown -R www-data:www-data /var/www
+RUN git config --global --add safe.directory /var/www
+
+COPY composer.json composer.lock ./
+
 COPY . .
 
-# Instalar dependências
-RUN composer install --no-interaction --optimize-autoloader
+RUN mkdir -p storage bootstrap/cache
 
-# Permissões
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chmod 777 -R \
+        storage \
+        bootstrap/cache
 
-EXPOSE 9000
-CMD ["php-fpm"]
-EOF
+
+RUN composer install \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-interaction
+
+EXPOSE 8000
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

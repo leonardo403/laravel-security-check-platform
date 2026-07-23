@@ -1,4 +1,3 @@
-// app/Jobs/ProcessScan.php
 <?php
 namespace App\Jobs;
 
@@ -10,6 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProcessScan implements ShouldQueue
 {
@@ -24,21 +24,22 @@ class ProcessScan implements ShouldQueue
 
     public function handle(SecurityScanner $scanner): void
     {
-        Log::info("Processing scan job: {$this->scan->id}");
+        Log::info("Processing scan job: {$this->scan->id}", ['type' => $this->scan->scan_type]);
 
-        $this->scan->update(['status' => 'processing']);
+        $this->scan->update(['status' => 'processing', 'progress' => 5]);
 
         try {
-            // Simular clone do repositório
-            $tempPath = storage_path('app/temp/' . uniqid('repo_'));
-            mkdir($tempPath, 0755, true);
+            $tempPath = $this->prepareScanSource();
 
-            // Executar scan
-            $result = $scanner->scan($tempPath, $this->scan);
+            $this->scan->update(['progress' => 20]);
 
-            // Atualizar status
+            $result = $scanner->scan($tempPath, $this->scan, function ($progress) {
+                $this->scan->update(['progress' => $progress]);
+            });
+
             $this->scan->update([
                 'status' => 'completed',
+                'progress' => 100,
                 'completed_at' => now(),
             ]);
 
@@ -54,10 +55,67 @@ class ProcessScan implements ShouldQueue
             $this->scan->update(['status' => 'failed']);
             throw $e;
         } finally {
-            // Limpar diretório temporário
             if (isset($tempPath) && is_dir($tempPath)) {
-                rmdir($tempPath);
+                $this->cleanup($tempPath);
             }
         }
+    }
+
+    private function prepareScanSource(): string
+    {
+        $tempPath = storage_path('app/temp/' . uniqid('repo_'));
+        mkdir($tempPath, 0755, true);
+
+        switch ($this->scan->scan_type) {
+            case 'repository':
+                $this->scan->update(['progress' => 10]);
+                Log::info("Simulating git clone for: {$this->scan->repository_url}");
+                break;
+
+            case 'env':
+                $envContent = Storage::disk('local')->get($this->scan->env_file_path);
+                file_put_contents($tempPath . '/.env', $envContent);
+                $this->scan->update(['progress' => 15]);
+                Log::info("Env file loaded to: {$tempPath}");
+                break;
+
+            case 'upload':
+                $zipPath = Storage::disk('local')->path($this->scan->project_upload_path);
+                $this->extractZip($zipPath, $tempPath);
+                $this->scan->update(['progress' => 15]);
+                Log::info("Project zip extracted to: {$tempPath}");
+                break;
+        }
+
+        return $tempPath;
+    }
+
+    private function extractZip(string $zipPath, string $destPath): void
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath) === true) {
+            $zip->extractTo($destPath);
+            $zip->close();
+        } else {
+            throw new \RuntimeException("Failed to extract ZIP file");
+        }
+    }
+
+    private function cleanup(string $path): void
+    {
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getRealPath());
+            } else {
+                unlink($file->getRealPath());
+            }
+        }
+
+        rmdir($path);
     }
 }

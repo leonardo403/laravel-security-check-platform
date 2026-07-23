@@ -1,16 +1,20 @@
-#Criar docker-compose.yml simplificado para MVP
-version: '3.8'
+#version: '3'
 
 services:
-  #App Laravel
+  # App Laravel
   app:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: security-app
     restart: unless-stopped
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "8000:8000"
     environment:
       - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
       - DB_HOST=mysql
       - DB_DATABASE=security_mvp
       - DB_USERNAME=root
@@ -23,6 +27,29 @@ services:
       - redis
     networks:
       - mvp-network
+
+  # Worker para Jobs/Queue
+  #worker:
+  #  build:
+  #    context: .
+  #    dockerfile: docker/Dockerfile
+  #  container_name: security-worker
+  #  restart: unless-stopped
+  #  environment:
+  #    - APP_ENV=local
+  #    - DB_HOST=mysql
+  #    - DB_DATABASE=security_mvp
+  #    - DB_USERNAME=root
+  #    - DB_PASSWORD=root
+  #    - REDIS_HOST=redis
+  #  volumes:
+  #    - .:/var/www
+  #  command: php artisan queue:work --tries=3 --timeout=90
+  #  depends_on:
+  #    - mysql
+  #    - redis
+  #  networks:
+  #    - mvp-network
 
   # Nginx
   nginx:
@@ -51,8 +78,13 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - mvp-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Redis para Jobs
+  # Redis
   redis:
     image: redis:alpine
     container_name: security-redis
@@ -60,48 +92,33 @@ services:
       - "6379:6379"
     networks:
       - mvp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
-  # Worker para Jobs
-  worker:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    container_name: security-worker
-    command: php artisan queue:work redis --sleep=3 --tries=3
-    environment:
-      - APP_ENV=local
-      - DB_HOST=mysql
-      - DB_DATABASE=security_mvp
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - mvp-network
-
-  # Prometheus para métricas
-  prometheus:
-    image: prom/prometheus
-    container_name: security-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - mvp-network
-
-  # Grafana para dashboards
-  grafana:
-    image: grafana/grafana
-    container_name: security-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    networks:
-      - mvp-network
+  # Prometheus
+ # prometheus:
+ #   image: prom/prometheus
+ #   container_name: security-prometheus
+ #   ports:
+ #     - "9090:9090"
+ #   volumes:
+ #     - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+ #   networks:
+ #     - mvp-network
+#
+ # # Grafana
+ # grafana:
+ #   image: grafana/grafana
+ #   container_name: security-grafana
+ #   ports:
+ #     - "3001:3000"
+ #   environment:
+ #     - GF_SECURITY_ADMIN_PASSWORD=admin
+ #   networks:
+ #     - mvp-network
 
 networks:
   mvp-network:
@@ -109,4 +126,3 @@ networks:
 
 volumes:
   mysql_data:
-EOF

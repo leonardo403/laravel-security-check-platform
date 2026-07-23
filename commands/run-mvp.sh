@@ -19,9 +19,11 @@ sleep 10
 echo "📚 Instalando dependências Composer..."
 docker exec security-app composer install --no-interaction
 
+
 # 4. Gerar chave da aplicação
 echo "🔑 Gerando chave da aplicação..."
 docker exec security-app php artisan key:generate
+
 
 # 5. Executar migrations
 echo "🗄️ Executando migrations..."
@@ -29,18 +31,18 @@ docker exec security-app php artisan migrate --force
 
 # 6. Popular banco com planos
 echo "📊 Populando banco de dados..."
-docker exec security-app php artisan db:seed --class=PlanSeeder
+#docker exec security-app php artisan db:seed --class=PlanSeeder
 
 # 7. Criar usuário de teste
 echo "👤 Criando usuário de teste..."
-docker exec security-app php artisan tinker --execute="
-    \$user = new App\Models\User();
-    \$user->name = 'Admin Teste';
-    \$user->email = 'admin@teste.com';
-    \$user->password = bcrypt('password');
-    \$user->save();
-    echo 'Usuário criado: admin@teste.com / password';
-"
+#docker exec security-app php artisan tinker --execute="
+#    \$user = new App\Models\User();
+#    \$user->name = 'Admin Teste';
+#    \$user->email = 'admin@teste.com';
+#    \$user->password = bcrypt('password');
+#    \$user->save();
+#    echo 'Usuário criado: admin@teste.com / password';
+#"
 
 # 8. Limpar cache
 echo "🧹 Limpando cache..."
@@ -49,7 +51,7 @@ docker exec security-app php artisan optimize:clear
 echo ""
 echo "✅ MVP PRONTO!"
 echo "======================================"
-echo "📱 Acesse: http://localhost:8080"
+echo "📱 Acesse: http://localhost:8000"
 echo "📧 Login: admin@teste.com"
 echo "🔐 Senha: password"
 echo ""

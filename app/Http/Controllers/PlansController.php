@@ -21,13 +21,10 @@ class PlansController extends Controller
     {
         $user = $request->user();
 
-        // Simular assinatura (em produção integraria com Stripe/PagSeguro)
-        $user->subscription()->create([
-            'plan_id' => $plan->id,
-            'status' => 'active',
-            'starts_at' => now(),
-            'ends_at' => now()->addMonth(),
-        ]);
+        $user->subscription()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['subscription_plan_id' => $plan->id],
+        );
 
         return redirect()
             ->route('dashboard')

@@ -7,21 +7,30 @@ use Illuminate\Support\Facades\Log;
 
 class SecurityScanner
 {
-    public function scan(string $repositoryPath, Scan $scan): ScanResult
+    public function scan(string $repositoryPath, Scan $scan, ?callable $onProgress = null): ScanResult
     {
-        Log::info("Starting scan for: {$scan->repository_url}");
+        Log::info("Starting scan for: {$scan->repository_url}", ['type' => $scan->scan_type]);
 
         $startTime = microtime(true);
 
-        // Simular análise de vulnerabilidades
-        $vulnerabilities = $this->analyzeVulnerabilities($repositoryPath);
+        $this->updateProgress($onProgress, 30);
 
-        // Simular análise de dependências
-        $dependencies = $this->analyzeDependencies($repositoryPath);
+        $vulnerabilities = $this->analyzeVulnerabilities($repositoryPath, $scan->scan_type);
+
+        $this->updateProgress($onProgress, 50);
+
+        $dependencies = $this->analyzeDependencies($repositoryPath, $scan->scan_type);
+
+        $this->updateProgress($onProgress, 65);
+
+        $configChecks = $this->analyzeConfig($repositoryPath);
+
+        $this->updateProgress($onProgress, 85);
 
         $duration = microtime(true) - $startTime;
+        $score = $this->calculateScore($vulnerabilities, $configChecks);
 
-        $score = $this->calculateScore($vulnerabilities);
+        $this->updateProgress($onProgress, 95);
 
         Log::info("Scan completed with score: {$score}");
 
@@ -29,19 +38,31 @@ class SecurityScanner
             'scan_id' => $scan->id,
             'vulnerabilities' => $vulnerabilities,
             'dependencies' => $dependencies,
+            'config_checks' => $configChecks,
             'score' => $score,
             'duration_seconds' => round($duration, 2),
-            'summary' => $this->generateSummary($vulnerabilities, $dependencies, $score),
+            'summary' => $this->generateSummary($vulnerabilities, $dependencies, $configChecks, $score),
         ]);
     }
 
-    private function analyzeVulnerabilities(string $path): array
+    private function analyzeConfig(string $path): array
     {
-        // Simulação - em produção usaria o pacote laravel-security-check
+        $checker = new SecurityConfigChecker($path);
+        return $checker->run();
+    }
+
+    private function analyzeVulnerabilities(string $path, string $scanType): array
+    {
         $severities = ['critical', 'high', 'medium', 'low'];
         $vulnerabilities = [];
 
-        for ($i = 0; $i < rand(1, 10); $i++) {
+        $maxVulns = match($scanType) {
+            'env' => rand(3, 8),
+            'upload' => rand(5, 15),
+            default => rand(1, 10),
+        };
+
+        for ($i = 0; $i < $maxVulns; $i++) {
             $severity = $severities[array_rand($severities)];
             $vulnerabilities[] = [
                 'name' => "Vulnerability " . ($i + 1),
@@ -56,10 +77,16 @@ class SecurityScanner
         return $vulnerabilities;
     }
 
-    private function analyzeDependencies(string $path): array
+    private function analyzeDependencies(string $path, string $scanType): array
     {
+        $totalDeps = match($scanType) {
+            'env' => rand(5, 20),
+            'upload' => rand(30, 120),
+            default => rand(20, 100),
+        };
+
         return [
-            'total' => rand(20, 100),
+            'total' => $totalDeps,
             'outdated' => rand(0, 15),
             'vulnerable' => rand(0, 5),
             'packages' => [
@@ -70,7 +97,7 @@ class SecurityScanner
         ];
     }
 
-    private function calculateScore(array $vulnerabilities): int
+    private function calculateScore(array $vulnerabilities, array $configChecks): int
     {
         $weights = [
             'critical' => 10,
@@ -79,19 +106,52 @@ class SecurityScanner
             'low' => 1,
         ];
 
+        $configPenalties = [
+            'critical' => 15,
+            'high' => 10,
+            'medium' => 5,
+            'low' => 2,
+        ];
+
         $score = 100;
+
         foreach ($vulnerabilities as $vuln) {
             $score -= $weights[$vuln['severity']] ?? 0;
         }
 
-        return max(0, $score);
+        foreach ($configChecks as $check) {
+            if ($check['status'] === 'fail') {
+                $score -= $configPenalties[$check['severity']] ?? 5;
+            } elseif ($check['status'] === 'warning') {
+                $score -= ($configPenalties[$check['severity']] ?? 5) / 2;
+            }
+        }
+
+        return max(0, min(100, (int) $score));
     }
 
-    private function generateSummary(array $vulnerabilities, array $dependencies, int $score): string
+    private function generateSummary(array $vulnerabilities, array $dependencies, array $configChecks, int $score): string
     {
         $critical = count(array_filter($vulnerabilities, fn($v) => $v['severity'] === 'critical'));
         $high = count(array_filter($vulnerabilities, fn($v) => $v['severity'] === 'high'));
 
-        return "Security Score: {$score}/100. Found {$critical} critical and {$high} high severity vulnerabilities.";
+        $configFails = count(array_filter($configChecks, fn($c) => $c['status'] === 'fail'));
+        $configWarnings = count(array_filter($configChecks, fn($c) => $c['status'] === 'warning'));
+
+        $summary = "Security Score: {$score}/100.";
+        $summary .= " Found {$critical} critical and {$high} high severity vulnerabilities.";
+
+        if ($configFails > 0 || $configWarnings > 0) {
+            $summary .= " Config checks: {$configFails} failures, {$configWarnings} warnings.";
+        }
+
+        return $summary;
+    }
+
+    private function updateProgress(?callable $onProgress, int $progress): void
+    {
+        if ($onProgress) {
+            $onProgress($progress);
+        }
     }
 }

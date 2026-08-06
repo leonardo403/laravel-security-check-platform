@@ -24,7 +24,9 @@
             <button type="submit" class="w-full rounded-xl bg-cyan-500 py-2.5 font-semibold text-slate-950 hover:bg-cyan-400">Entrar</button>
         </form>
 
-        <p class="mt-6 text-sm text-slate-400">Ainda não tem conta? <a href="{{ route('register') }}" class="text-cyan-400 hover:text-cyan-300">Cadastre-se</a></p>
+        <p class="mt-4 text-sm text-slate-400"><a href="{{ route('password.request') }}" class="text-cyan-400 hover:text-cyan-300">Esqueceu sua senha?</a></p>
+
+        <p class="mt-4 text-sm text-slate-400">Ainda não tem conta? <a href="{{ route('register') }}" class="text-cyan-400 hover:text-cyan-300">Cadastre-se</a></p>
     </div>
 </div>
 @endsection

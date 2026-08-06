@@ -13,12 +13,16 @@ class Subscription extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const STATUS_PENDING = 'pending';
+
     protected $fillable = [
         'user_id',
         'subscription_plan_id',
         'status',
         'starts_at',
         'expires_at',
+        'stripe_payment_intent_id',
+        'stripe_status',
     ];
 
     protected $casts = [

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,12 +13,13 @@ class AuthTest extends TestCase
 
     public function test_user_can_register_and_be_redirected_to_dashboard(): void
     {
-        $response = $this->post('/register', [
-            'name' => 'Ana Teste',
-            'email' => 'ana@example.com',
-            'password' => 'senha123',
-            'password_confirmation' => 'senha123',
-        ]);
+        $response = $this->withoutMiddleware(PreventRequestForgery::class)
+            ->post('/register', [
+                'name' => 'Ana Teste',
+                'email' => 'ana@example.com',
+                'password' => 'senha123',
+                'password_confirmation' => 'senha123',
+            ]);
 
         $response->assertRedirect('/dashboard');
         $this->assertDatabaseHas('users', ['email' => 'ana@example.com']);
@@ -31,10 +33,11 @@ class AuthTest extends TestCase
             'password' => bcrypt('senha123'),
         ]);
 
-        $response = $this->post('/login', [
-            'email' => 'joao@example.com',
-            'password' => 'senha123',
-        ]);
+        $response = $this->withoutMiddleware(PreventRequestForgery::class)
+            ->post('/login', [
+                'email' => 'joao@example.com',
+                'password' => 'senha123',
+            ]);
 
         $response->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);

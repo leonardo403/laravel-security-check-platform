@@ -20,14 +20,14 @@
     @php
         $isCurrent = $currentPlan && $currentPlan->id === $plan->id;
         $isExpiredPlan = $expiredPlan && $expiredPlan->id === $plan->id;
-        $isPremium = $plan->slug === 'premium';
+        $isMedium = $plan->slug === 'medium';
     @endphp
-    <div class="bg-white rounded-lg shadow p-6 {{ $isPremium ? 'border-2 border-blue-500' : '' }} {{ $isCurrent ? 'ring-2 ring-green-500' : '' }}">
+    <div class="bg-white rounded-lg shadow p-6 {{ $isMedium ? 'border-2 border-blue-500' : '' }} {{ $isCurrent ? 'ring-2 ring-green-500' : '' }}">
         @if($isCurrent)
             <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">Seu Plano</span>
         @elseif($isExpiredPlan)
             <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">Expirado</span>
-        @elseif($isPremium)
+        @elseif($isMedium)
             <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Mais Popular</span>
         @endif
 
@@ -53,22 +53,11 @@
             <div class="w-full bg-green-100 text-green-700 py-2 px-4 rounded-lg text-center font-medium">
                 Plano Atual
             </div>
-        @elseif($isExpiredPlan)
-            <form action="{{ route('plans.subscribe', $plan) }}" method="POST">
-                @csrf
-                <button type="submit"
-                    class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition">
-                    Renovar {{ $plan->name }}
-                </button>
-            </form>
         @else
-            <form action="{{ route('plans.subscribe', $plan) }}" method="POST">
-                @csrf
-                <button type="submit"
-                    class="w-full {{ $isPremium ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700' }} text-white py-2 px-4 rounded-lg transition">
-                    Assinar {{ $plan->name }}
-                </button>
-            </form>
+            <a href="{{ route('plans.checkout', $plan) }}"
+                class="block w-full text-center {{ $isExpiredPlan ? 'bg-red-600 hover:bg-red-700' : ($isMedium ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700') }} text-white py-2 px-4 rounded-lg transition">
+                {{ $isExpiredPlan ? 'Renovar ' . $plan->name : 'Assinar ' . $plan->name }}
+            </a>
         @endif
     </div>
     @endforeach

@@ -1,8 +1,11 @@
 <?php
+
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ScanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlansController;
+use App\Http\Controllers\ScanController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,6 +18,15 @@ Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('regi
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.store');
+});
+
+Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])->withoutMiddleware('csrf');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/metrics', [DashboardController::class, 'metrics'])->name('metrics');
@@ -24,5 +36,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/plans', [PlansController::class, 'index'])->name('plans.index');
     Route::get('/plans/{plan}', [PlansController::class, 'show'])->name('plans.show');
-    Route::post('/plans/{plan}/subscribe', [PlansController::class, 'subscribe'])->name('plans.subscribe');
+    Route::get('/plans/{plan}/checkout', [PlansController::class, 'checkout'])->name('plans.checkout');
+    Route::get('/subscription/confirm', [SubscriptionController::class, 'confirm'])->name('subscription.confirm');
 });

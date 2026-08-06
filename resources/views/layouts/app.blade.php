@@ -22,6 +22,22 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    @php
+                        $authSubscription = auth()->user()->subscription;
+                        $plan = $authSubscription?->isActive() ? $authSubscription->plan : null;
+                        $subExpired = $authSubscription !== null && !$authSubscription->isActive();
+                    @endphp
+                    @if($plan)
+                        <span class="px-2 py-1 text-xs rounded-full font-medium
+                            @if($plan->slug === 'premium') bg-blue-100 text-blue-800
+                            @elseif($plan->slug === 'medium') bg-purple-100 text-purple-800
+                            @else bg-gray-100 text-gray-800
+                            @endif">
+                            {{ $plan->name }}
+                        </span>
+                    @elseif($subExpired)
+                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Plano Expirado</span>
+                    @endif
                     <span class="text-sm text-gray-600">{{ auth()->user()->name }}</span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -43,6 +59,12 @@
         @if(session('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 {{ session('error') }}
+            </div>
+        @endif
+
+        @if(session('info'))
+            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+                {{ session('info') }}
             </div>
         @endif
 

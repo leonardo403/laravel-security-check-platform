@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Scan;
@@ -16,6 +17,7 @@ class ProcessScan implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 300;
+
     public $tries = 3;
 
     public function __construct(
@@ -44,12 +46,12 @@ class ProcessScan implements ShouldQueue
             ]);
 
             Log::info("Scan completed successfully: {$this->scan->id}", [
-                'score' => $result->score
+                'score' => $result->score,
             ]);
 
         } catch (\Exception $e) {
             Log::error("Scan failed: {$this->scan->id}", [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $this->scan->update(['status' => 'failed']);
@@ -63,18 +65,19 @@ class ProcessScan implements ShouldQueue
 
     private function prepareScanSource(): string
     {
-        $tempPath = storage_path('app/temp/' . uniqid('repo_'));
+        $tempPath = storage_path('app/temp/'.uniqid('repo_'));
         mkdir($tempPath, 0755, true);
 
         switch ($this->scan->scan_type) {
             case 'repository':
                 $this->scan->update(['progress' => 10]);
-                Log::info("Simulating git clone for: {$this->scan->repository_url}");
+                $this->cloneRepository($this->scan->repository_url, $this->scan->branch ?? 'main', $tempPath);
+                Log::info("Repository cloned for: {$this->scan->repository_url}");
                 break;
 
             case 'env':
                 $envContent = Storage::disk('local')->get($this->scan->env_file_path);
-                file_put_contents($tempPath . '/.env', $envContent);
+                file_put_contents($tempPath.'/.env', $envContent);
                 $this->scan->update(['progress' => 15]);
                 Log::info("Env file loaded to: {$tempPath}");
                 break;
@@ -90,14 +93,39 @@ class ProcessScan implements ShouldQueue
         return $tempPath;
     }
 
+    private function cloneRepository(string $url, string $branch, string $destPath): void
+    {
+        if (! preg_match('#^(https?://|git@|ssh://|git://)#', $url)) {
+            throw new \RuntimeException("URL de repositório inválida: {$url}");
+        }
+
+        $command = sprintf(
+            'timeout 120 git clone --depth 1 --single-branch --branch %s %s %s 2>&1',
+            escapeshellarg($branch),
+            escapeshellarg($url),
+            escapeshellarg($destPath)
+        );
+
+        $output = [];
+        $exitCode = 0;
+
+        exec($command, $output, $exitCode);
+
+        if ($exitCode !== 0) {
+            throw new \RuntimeException(
+                'Falha ao clonar o repositório: '.implode(' ', array_slice($output, -5))
+            );
+        }
+    }
+
     private function extractZip(string $zipPath, string $destPath): void
     {
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($zipPath) === true) {
             $zip->extractTo($destPath);
             $zip->close();
         } else {
-            throw new \RuntimeException("Failed to extract ZIP file");
+            throw new \RuntimeException('Failed to extract ZIP file');
         }
     }
 

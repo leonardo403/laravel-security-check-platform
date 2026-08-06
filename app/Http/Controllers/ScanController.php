@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Scan;
-use App\Jobs\ProcessScan;
 use App\Http\Requests\StoreScanRequest;
+use App\Jobs\ProcessScan;
+use App\Models\Scan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,12 +18,22 @@ class ScanController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('scans.index', compact('scans'));
+        $user = $request->user();
+        $plan = $user->activeSubscription()?->plan;
+        $scansThisMonth = $user->scans()->whereMonth('created_at', now()->month)->count();
+        $scansRemaining = $plan ? max(0, $plan->max_scans_per_month - $scansThisMonth) : 0;
+
+        return view('scans.index', compact('scans', 'plan', 'scansRemaining'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('scans.create');
+        $user = $request->user();
+        $plan = $user->activeSubscription()?->plan;
+        $scansThisMonth = $user->scans()->whereMonth('created_at', now()->month)->count();
+        $scansRemaining = $plan ? max(0, $plan->max_scans_per_month - $scansThisMonth) : 0;
+
+        return view('scans.create', compact('plan', 'scansThisMonth', 'scansRemaining'));
     }
 
     public function store(StoreScanRequest $request)
@@ -31,26 +42,34 @@ class ScanController extends Controller
         $user = $request->user();
         $scans = [];
 
-        $hasRepo = !empty($validated['repository_url']);
+        $hasRepo = ! empty($validated['repository_url']);
         $hasEnv = $request->hasFile('env_file');
         $hasUpload = $request->hasFile('project_file');
 
-        if (!$hasRepo && !$hasEnv && !$hasUpload) {
+        if (! $hasRepo && ! $hasEnv && ! $hasUpload) {
             return back()->with('error', 'Envie pelo menos uma fonte para scanear.');
         }
 
-        $plan = $user->subscription?->plan;
+        $totalNew = ($hasRepo ? 1 : 0) + ($hasEnv ? 1 : 0) + ($hasUpload ? 1 : 0);
 
-        if ($plan) {
-            $scansThisMonth = $user->scans()
-                ->whereMonth('created_at', now()->month)
-                ->count();
+        $plan = $user->activeSubscription()?->plan;
 
-            $totalNew = ($hasRepo ? 1 : 0) + ($hasEnv ? 1 : 0) + ($hasUpload ? 1 : 0);
+        if (! $plan) {
+            return back()->with('error', 'Você não possui um plano ativo. Assine um plano para realizar scans.');
+        }
 
-            if (($scansThisMonth + $totalNew) > $plan->max_scans_per_month) {
-                return back()->with('error', 'Você atingiu o limite de scans do seu plano.');
-            }
+        $scansThisMonth = $user->scans()
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
+        $remaining = $plan->max_scans_per_month - $scansThisMonth;
+
+        if ($remaining <= 0) {
+            return back()->with('error', 'Você atingiu o limite de '.$plan->max_scans_per_month.' scans do seu plano este mês.');
+        }
+
+        if ($totalNew > $remaining) {
+            return back()->with('error', 'Você tem apenas '.$remaining.' scan(s) restante(s) este mês. Tente enviar menos arquivos.');
         }
 
         if ($hasRepo) {
@@ -65,7 +84,7 @@ class ScanController extends Controller
             $envPath = $envFile->store('scans/env', 'local');
             $scans[] = $this->createScan($user, 'env', [
                 'env_file_path' => $envPath,
-                'repository_url' => 'env-upload://' . $envFile->getClientOriginalName(),
+                'repository_url' => 'env-upload://'.$envFile->getClientOriginalName(),
             ]);
         }
 
@@ -74,7 +93,7 @@ class ScanController extends Controller
             $projectPath = $projectFile->store('scans/uploads', 'local');
             $scans[] = $this->createScan($user, 'upload', [
                 'project_upload_path' => $projectPath,
-                'repository_url' => 'project-upload://' . $projectFile->getClientOriginalName(),
+                'repository_url' => 'project-upload://'.$projectFile->getClientOriginalName(),
             ]);
         }
 
@@ -91,7 +110,7 @@ class ScanController extends Controller
 
         return redirect()
             ->route('scans.index')
-            ->with('success', count($scans) . ' scans iniciados com sucesso!');
+            ->with('success', count($scans).' scans iniciados com sucesso!');
     }
 
     public function show(Scan $scan)
@@ -111,6 +130,25 @@ class ScanController extends Controller
             'progress' => $scan->progress,
             'status' => $scan->status,
         ]);
+    }
+
+    public function destroy(Scan $scan)
+    {
+        $this->authorize('delete', $scan);
+
+        if ($scan->env_file_path && \Storage::disk('local')->exists($scan->env_file_path)) {
+            \Storage::disk('local')->delete($scan->env_file_path);
+        }
+
+        if ($scan->project_upload_path && \Storage::disk('local')->exists($scan->project_upload_path)) {
+            \Storage::disk('local')->delete($scan->project_upload_path);
+        }
+
+        $scan->delete();
+
+        return redirect()
+            ->route('scans.index')
+            ->with('success', 'Scan removido com sucesso!');
     }
 
     private function createScan($user, string $type, array $extra): Scan

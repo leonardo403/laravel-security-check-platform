@@ -36,18 +36,20 @@ php artisan test
 - PHPUnit 12 with SQLite in-memory (`phpunit.xml` sets `DB_CONNECTION=sqlite`)
 - Tests use `RefreshDatabase` trait — no external DB needed
 - Run single test: `php artisan test --filter=AuthTest`
-- Two test failures currently known in `AuthTest` (see `.phpunit.result.cache`)
+- Tests use MySQL (see note below); the local PHP lacks the `pdo_sqlite` driver, so `phpunit.xml`'s SQLite setting fails locally
 
 ## Conventions
 
 - 4-space indentation, LF line endings, UTF-8 (`.editorconfig`)
 - User model uses `#[Fillable]` and `#[Hidden]` PHP attributes (Laravel 13 style)
 - Scans dispatched to `scans` queue: `ProcessScan::dispatch($scan)->onQueue('scans')`
+  - Queue workers MUST listen on the `scans` queue: `php artisan queue:work --queue=scans,default` (or `queue:listen --queue=scans,default`). A worker on the default queue alone will never process scans
+  - Docker: `docker/entrypoint.sh` runs the worker with a restart loop; `composer dev` listens with `--queue=scans,default`
 - Frontend fonts loaded via `bunny()` from `laravel-vite-plugin`
 
 ## Gotchas
 
-- `User::subscription()` references `Subscription::class` but only `SubscriptionPlan.php` exists — needs a `Subscription` model or the relationship is broken
+- `Subscription::plan()` requires the FK explicitly: `belongsTo(SubscriptionPlan::class, 'subscription_plan_id')` (column is not `plan_id`)
 - `ScanController::show()` calls `$this->authorize('view', $scan)` but no `ScanPolicy` exists — will error at runtime
 - Nginx config points `fastcgi_pass` to `app:8687` but Dockerfile exposes port 8000 — port mismatch if using Nginx
 - `composer dev` requires `npx concurrently` (installed via npm devDependencies)

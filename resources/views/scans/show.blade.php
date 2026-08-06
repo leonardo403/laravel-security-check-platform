@@ -197,9 +197,9 @@
             <tr class="border-t">
                 <td class="px-4 py-2">{{ $pkg['name'] }}</td>
                 <td class="px-4 py-2">{{ $pkg['version'] }}</td>
-                <td class="px-4 py-2">{{ $pkg['latest'] }}</td>
+                <td class="px-4 py-2">{{ $pkg['latest'] ?? '-' }}</td>
                 <td class="px-4 py-2">
-                    @if($pkg['version'] === $pkg['latest'])
+                    @if(empty($pkg['latest']) || $pkg['version'] === $pkg['latest'])
                         <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Atual</span>
                     @else
                         <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">Desatualizada</span>
@@ -235,11 +235,11 @@
     const statusMessages = {
         5: 'Preparando scan...',
         10: 'Carregando fonte...',
-        15: 'Arquivo carregado...',
+        15: 'Fonte carregada...',
         20: 'Análise iniciada...',
-        30: 'Analisando vulnerabilidades...',
-        50: 'Analisando dependências...',
-        65: 'Verificando configurações...',
+        30: 'Analisando dependências...',
+        45: 'Verificando vulnerabilidades...',
+        65: 'Analisando configurações...',
         85: 'Calculando score...',
         95: 'Gerando relatório...',
         100: 'Concluído!'

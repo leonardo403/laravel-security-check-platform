@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SubscriptionPlan extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'price', 'max_scans_per_month', 'features', 'is_active'
+        'name', 'slug', 'price', 'max_scans_per_month', 'features', 'is_active',
     ];
 
     protected $casts = [
@@ -15,4 +15,9 @@ class SubscriptionPlan extends Model
         'price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
 }

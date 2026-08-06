@@ -35,6 +35,19 @@ class User extends Authenticatable
     {
         return $this->hasOne(Subscription::class);
     }
+
+    public function activeSubscription(): ?Subscription
+    {
+        $subscription = $this->subscription;
+
+        return $subscription?->isActive() ? $subscription : null;
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription() !== null;
+    }
+
     public function scans()
     {
         return $this->hasMany(Scan::class);

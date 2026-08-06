@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Scanner;
 
 use App\Models\Scan;
@@ -15,11 +16,12 @@ class SecurityScanner
 
         $this->updateProgress($onProgress, 30);
 
-        $vulnerabilities = $this->analyzeVulnerabilities($repositoryPath, $scan->scan_type);
+        $dependencies = $this->analyzeDependencies($repositoryPath);
 
-        $this->updateProgress($onProgress, 50);
+        $this->updateProgress($onProgress, 45);
 
-        $dependencies = $this->analyzeDependencies($repositoryPath, $scan->scan_type);
+        $vulnerabilities = $this->analyzeVulnerabilities($repositoryPath, $dependencies);
+        $dependencies['vulnerable'] = $this->countVulnerableDependencies($vulnerabilities);
 
         $this->updateProgress($onProgress, 65);
 
@@ -48,53 +50,37 @@ class SecurityScanner
     private function analyzeConfig(string $path): array
     {
         $checker = new SecurityConfigChecker($path);
+
         return $checker->run();
     }
 
-    private function analyzeVulnerabilities(string $path, string $scanType): array
+    private function analyzeDependencies(string $path): array
     {
-        $severities = ['critical', 'high', 'medium', 'low'];
-        $vulnerabilities = [];
-
-        $maxVulns = match($scanType) {
-            'env' => rand(3, 8),
-            'upload' => rand(5, 15),
-            default => rand(1, 10),
-        };
-
-        for ($i = 0; $i < $maxVulns; $i++) {
-            $severity = $severities[array_rand($severities)];
-            $vulnerabilities[] = [
-                'name' => "Vulnerability " . ($i + 1),
-                'severity' => $severity,
-                'package' => "package/example-" . rand(1, 100),
-                'version' => '1.' . rand(0, 9) . '.' . rand(0, 9),
-                'description' => 'Security issue found in dependency',
-                'cve' => 'CVE-2024-' . rand(1000, 9999),
-            ];
-        }
-
-        return $vulnerabilities;
+        return (new DependencyAnalyzer)->analyze($path);
     }
 
-    private function analyzeDependencies(string $path, string $scanType): array
+    private function analyzeVulnerabilities(string $path, array $dependencies): array
     {
-        $totalDeps = match($scanType) {
-            'env' => rand(5, 20),
-            'upload' => rand(30, 120),
-            default => rand(20, 100),
-        };
+        $dependencyVulnerabilities = (new VulnerabilityChecker)->check($dependencies['packages'] ?? []);
 
-        return [
-            'total' => $totalDeps,
-            'outdated' => rand(0, 15),
-            'vulnerable' => rand(0, 5),
-            'packages' => [
-                ['name' => 'laravel/framework', 'version' => '11.0', 'latest' => '11.5'],
-                ['name' => 'guzzlehttp/guzzle', 'version' => '7.5', 'latest' => '7.8'],
-                ['name' => 'monolog/monolog', 'version' => '3.2', 'latest' => '3.5'],
-            ],
-        ];
+        $codeVulnerabilities = (new CodePatternAnalyzer)->analyze($path);
+
+        return array_merge($dependencyVulnerabilities, $codeVulnerabilities);
+    }
+
+    private function countVulnerableDependencies(array $vulnerabilities): int
+    {
+        $packages = [];
+
+        foreach ($vulnerabilities as $vulnerability) {
+            $package = $vulnerability['package'] ?? '';
+
+            if ($package !== '' && $package !== 'source-code') {
+                $packages[$package] = true;
+            }
+        }
+
+        return count($packages);
     }
 
     private function calculateScore(array $vulnerabilities, array $configChecks): int
@@ -132,11 +118,11 @@ class SecurityScanner
 
     private function generateSummary(array $vulnerabilities, array $dependencies, array $configChecks, int $score): string
     {
-        $critical = count(array_filter($vulnerabilities, fn($v) => $v['severity'] === 'critical'));
-        $high = count(array_filter($vulnerabilities, fn($v) => $v['severity'] === 'high'));
+        $critical = count(array_filter($vulnerabilities, fn ($v) => $v['severity'] === 'critical'));
+        $high = count(array_filter($vulnerabilities, fn ($v) => $v['severity'] === 'high'));
 
-        $configFails = count(array_filter($configChecks, fn($c) => $c['status'] === 'fail'));
-        $configWarnings = count(array_filter($configChecks, fn($c) => $c['status'] === 'warning'));
+        $configFails = count(array_filter($configChecks, fn ($c) => $c['status'] === 'fail'));
+        $configWarnings = count(array_filter($configChecks, fn ($c) => $c['status'] === 'warning'));
 
         $summary = "Security Score: {$score}/100.";
         $summary .= " Found {$critical} critical and {$high} high severity vulnerabilities.";

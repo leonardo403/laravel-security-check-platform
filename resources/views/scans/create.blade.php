@@ -2,6 +2,36 @@
 
 @section('content')
 <div class="max-w-2xl mx-auto">
+    @if(!$plan)
+    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="font-medium">Você não possui um plano ativo.</p>
+                <p class="text-sm">Assine um plano para começar a scanear seus projetos.</p>
+            </div>
+            <a href="{{ route('plans.index') }}" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition text-sm whitespace-nowrap">
+                Ver Planos
+            </a>
+        </div>
+    </div>
+    @elseif($scansRemaining <= 0)
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="font-medium">Limite de scans atingido!</p>
+                <p class="text-sm">Você utilizou todos os {{ $plan->max_scans_per_month }} scans do seu plano este mês.</p>
+            </div>
+            <a href="{{ route('plans.index') }}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm whitespace-nowrap">
+                Fazer Upgrade
+            </a>
+        </div>
+    </div>
+    @elseif($scansRemaining <= 3)
+    <div class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded mb-4">
+        <p class="font-medium">Atenção: apenas {{ $scansRemaining }} scan(s) restante(s) este mês.</p>
+    </div>
+    @endif
+
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-2xl font-bold mb-6">Novo Scan de Segurança</h2>
 
@@ -43,8 +73,18 @@
                 <p class="text-sm text-gray-500 mt-1">Código fonte do projeto</p>
             </div>
 
+            @if($plan)
+            <div class="text-sm text-gray-500 mb-4">
+                Plano <span class="font-medium">{{ $plan->name }}</span> — {{ $scansRemaining }} scan(s) restante(s) este mês
+            </div>
+            @endif
+
             <button type="submit"
-                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                @if(!$plan || $scansRemaining <= 0) disabled
+                class="w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed"
+                @else
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+                @endif>
                 Iniciar Scan
             </button>
         </form>

@@ -33,10 +33,11 @@ php artisan test
 
 ## Testing
 
-- PHPUnit 12 with SQLite in-memory (`phpunit.xml` sets `DB_CONNECTION=sqlite`)
-- Tests use `RefreshDatabase` trait — no external DB needed
+- PHPUnit 12 with SQLite in-memory (`:memory:`), forced via `tests/TestCase.php::createApplication()` — no external DB needed
+- `phpunit.xml` `<env DB_CONNECTION=sqlite>` alone is NOT enough: `php artisan test` (Collision) spawns a PHPUnit subprocess where the stale `$_SERVER['DB_CONNECTION']` inherited from the container env wins over Laravel's `env()` (it reads `$_SERVER` first). The `createApplication()` override sets `$_SERVER`/`$_ENV`/`putenv` before the test app boots
+- `tests/Feature/DbConfigTest.php` guards against regression: asserts the suite runs on sqlite `:memory:`
+- CRITICAL: never let tests hit the real MySQL `security_mvp` DB. The `RefreshDatabase` trait runs `migrate:fresh`, and past runs wiped all dev data (users/plans/scans) including real accounts. Keep the sqlite override intact
 - Run single test: `php artisan test --filter=AuthTest`
-- Tests use MySQL (see note below); the local PHP lacks the `pdo_sqlite` driver, so `phpunit.xml`'s SQLite setting fails locally
 
 ## Conventions
 

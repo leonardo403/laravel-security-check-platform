@@ -13,7 +13,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+        <form method="POST" action="/forgot-password" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-medium mb-1 text-slate-300">E-mail</label>
@@ -23,7 +23,7 @@
             <button type="submit" class="w-full rounded-xl bg-cyan-500 py-2.5 font-semibold text-slate-950 hover:bg-cyan-400">Enviar link de redefinição</button>
         </form>
 
-        <p class="mt-6 text-sm text-slate-400">Lembrou a senha? <a href="{{ route('login') }}" class="text-cyan-400 hover:text-cyan-300">Entrar</a></p>
+        <p class="mt-6 text-sm text-slate-400">Lembrou a senha? <a href="/login" class="text-cyan-400 hover:text-cyan-300">Entrar</a></p>
     </div>
 </div>
 @endsection

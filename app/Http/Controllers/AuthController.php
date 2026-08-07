@@ -110,7 +110,7 @@ class AuthController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-            ? redirect()->route('dashboard')->with('success', 'Senha redefinida com sucesso!')
+            ? redirect('/dashboard')->with('success', 'Senha redefinida com sucesso!')
             : back()->withErrors(['email' => 'O token de redefinição é inválido ou expirou.']);
     }
 }

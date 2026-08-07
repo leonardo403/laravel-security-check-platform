@@ -16,9 +16,9 @@
                         <span class="text-xl font-bold text-gray-800">🔒 Security Platform</span>
                     </div>
                     <div class="ml-10 flex items-center space-x-4">
-                        <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-gray-900">Dashboard</a>
-                        <a href="{{ route('scans.index') }}" class="text-gray-700 hover:text-gray-900">Scans</a>
-                        <a href="{{ route('plans.index') }}" class="text-gray-700 hover:text-gray-900">Planos</a>
+                        <a href="/dashboard" class="text-gray-700 hover:text-gray-900">Dashboard</a>
+                        <a href="/scans" class="text-gray-700 hover:text-gray-900">Scans</a>
+                        <a href="/plans" class="text-gray-700 hover:text-gray-900">Planos</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -39,7 +39,7 @@
                         <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Plano Expirado</span>
                     @endif
                     <span class="text-sm text-gray-600">{{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="/logout">
                         @csrf
                         <button type="submit" class="text-sm text-red-600">Sair</button>
                     </form>

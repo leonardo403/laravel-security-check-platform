@@ -6,7 +6,7 @@
         <p class="text-sm uppercase tracking-[0.3em] text-cyan-400 mb-3">Redefinir senha</p>
         <h2 class="text-2xl font-bold mb-6">Defina uma nova senha</h2>
 
-        <form method="POST" action="{{ route('password.store') }}" class="space-y-4">
+        <form method="POST" action="/reset-password" class="space-y-4">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
             <div>

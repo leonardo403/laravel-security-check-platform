@@ -6,7 +6,7 @@
         <p class="text-sm uppercase tracking-[0.3em] text-cyan-400 mb-3">Cadastro</p>
         <h2 class="text-2xl font-bold mb-6">Crie sua conta</h2>
 
-        <form method="POST" action="{{ route('register') }}" class="space-y-4">
+        <form method="POST" action="/register" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-medium mb-1 text-slate-300">Nome</label>
@@ -30,7 +30,7 @@
             <button type="submit" class="w-full rounded-xl bg-green-500 py-2.5 font-semibold text-slate-950 hover:bg-green-400">Cadastrar</button>
         </form>
 
-        <p class="mt-6 text-sm text-slate-400">Já tem conta? <a href="{{ route('login') }}" class="text-cyan-400 hover:text-cyan-300">Entrar</a></p>
+        <p class="mt-6 text-sm text-slate-400">Já tem conta? <a href="/login" class="text-cyan-400 hover:text-cyan-300">Entrar</a></p>
     </div>
 </div>
 @endsection

@@ -35,14 +35,14 @@ echo "📊 Populando banco de dados..."
 
 # 7. Criar usuário de teste
 echo "👤 Criando usuário de teste..."
-#docker exec security-app php artisan tinker --execute="
-#    \$user = new App\Models\User();
-#    \$user->name = 'Admin Teste';
-#    \$user->email = 'admin@teste.com';
-#    \$user->password = bcrypt('password');
-#    \$user->save();
-#    echo 'Usuário criado: admin@teste.com / password';
-#"
+docker exec security-app php artisan tinker --execute="
+    \$user = new App\Models\User();
+    \$user->name = 'Admin Teste';
+    \$user->email = 'admin@teste.com';
+    \$user->password = bcrypt('123456');
+    \$user->save();
+    echo 'Usuário criado: admin@teste.com / 123456';
+"
 
 # 8. Limpar cache
 echo "🧹 Limpando cache..."
@@ -53,7 +53,7 @@ echo "✅ MVP PRONTO!"
 echo "======================================"
 echo "📱 Acesse: http://localhost:8000"
 echo "📧 Login: admin@teste.com"
-echo "🔐 Senha: password"
+echo "🔐 Senha: 123456"
 echo ""
 echo "📊 Grafana: http://localhost:3001 (admin/admin)"
 echo "📈 Prometheus: http://localhost:9090"

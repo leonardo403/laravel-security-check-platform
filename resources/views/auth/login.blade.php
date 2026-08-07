@@ -6,7 +6,7 @@
         <p class="text-sm uppercase tracking-[0.3em] text-cyan-400 mb-3">Entrar</p>
         <h2 class="text-2xl font-bold mb-6">Acesse sua conta</h2>
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        <form method="POST" action="/login" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-sm font-medium mb-1 text-slate-300">E-mail</label>
@@ -24,9 +24,9 @@
             <button type="submit" class="w-full rounded-xl bg-cyan-500 py-2.5 font-semibold text-slate-950 hover:bg-cyan-400">Entrar</button>
         </form>
 
-        <p class="mt-4 text-sm text-slate-400"><a href="{{ route('password.request') }}" class="text-cyan-400 hover:text-cyan-300">Esqueceu sua senha?</a></p>
+        <p class="mt-4 text-sm text-slate-400"><a href="/forgot-password" class="text-cyan-400 hover:text-cyan-300">Esqueceu sua senha?</a></p>
 
-        <p class="mt-4 text-sm text-slate-400">Ainda não tem conta? <a href="{{ route('register') }}" class="text-cyan-400 hover:text-cyan-300">Cadastre-se</a></p>
+        <p class="mt-4 text-sm text-slate-400">Ainda não tem conta? <a href="/register" class="text-cyan-400 hover:text-cyan-300">Cadastre-se</a></p>
     </div>
 </div>
 @endsection

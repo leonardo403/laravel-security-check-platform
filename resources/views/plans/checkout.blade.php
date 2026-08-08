@@ -38,7 +38,9 @@
 <script src="https://js.stripe.com/v3/"></script>
 <script>
     const stripe = Stripe('{{ $stripeKey }}');
-    const elements = stripe.elements();
+    const clientSecret = '{{ $clientSecret }}';
+    const returnUrl = '{{ route('subscription.confirm') }}';
+    const elements = stripe.elements({ clientSecret });
 
     const paymentElement = elements.create('payment', {
         layout: 'tabs',
@@ -52,16 +54,35 @@
         message.classList.add('hidden');
         submitButton.disabled = true;
 
-        const { error } = await stripe.confirmPayment({
-            elements,
-            clientSecret: '{{ $clientSecret }}',
-            confirmParams: {
-                return_url: '{{ route('subscription.confirm') }}',
-            },
-        });
+        try {
+            const { error: submitError } = await elements.submit();
 
-        if (error) {
-            message.textContent = error.message;
+            if (submitError) {
+                message.textContent = submitError.message;
+                message.classList.remove('hidden');
+                submitButton.disabled = false;
+                return;
+            }
+
+            const { error } = await stripe.confirmPayment({
+                elements,
+                clientSecret,
+                confirmParams: {
+                    return_url: returnUrl,
+                },
+            });
+
+            if (error) {
+                message.textContent = error.message;
+                message.classList.remove('hidden');
+                submitButton.disabled = false;
+                return;
+            }
+
+            const paymentIntentId = clientSecret.split('_secret_')[0];
+            window.location.href = returnUrl + '?payment_intent=' + paymentIntentId;
+        } catch (err) {
+            message.textContent = err.message || 'Ocorreu um erro ao processar o pagamento. Tente novamente.';
             message.classList.remove('hidden');
             submitButton.disabled = false;
         }

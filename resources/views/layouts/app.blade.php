@@ -68,6 +68,12 @@
             </div>
         @endif
 
+        @if(session('warning'))
+            <div class="bg-yellow-50 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
+                {{ session('warning') }}
+            </div>
+        @endif
+
         @yield('content')
     </main>
 </body>

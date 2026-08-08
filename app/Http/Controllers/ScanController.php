@@ -41,6 +41,7 @@ class ScanController extends Controller
         $validated = $request->validated();
         $user = $request->user();
         $scans = [];
+        $warning = null;
 
         $hasRepo = ! empty($validated['repository_url']);
         $hasEnv = $request->hasFile('env_file');
@@ -82,6 +83,11 @@ class ScanController extends Controller
         if ($hasEnv) {
             $envFile = $request->file('env_file');
             $envPath = $envFile->store('scans/env', 'local');
+
+            if ($this->envFileContainsKeys($envFile->get())) {
+                $warning = 'O arquivo .env enviado contém chaves de configuração. Alguns antivírus e ferramentas de segurança bloqueiam uploads de arquivos com segredos (erro ERR_ACCESS_DENIED). Se o upload for bloqueado, envie o arquivo compactado em .zip pela opção "Upload Projeto".';
+            }
+
             $scans[] = $this->createScan($user, 'env', [
                 'env_file_path' => $envPath,
                 'repository_url' => 'env-upload://'.$envFile->getClientOriginalName(),
@@ -103,14 +109,20 @@ class ScanController extends Controller
         }
 
         if (count($scans) === 1) {
-            return redirect()
+            $response = redirect()
                 ->route('scans.show', $scans[0])
                 ->with('success', 'Scan iniciado com sucesso!');
+        } else {
+            $response = redirect()
+                ->route('scans.index')
+                ->with('success', count($scans).' scans iniciados com sucesso!');
         }
 
-        return redirect()
-            ->route('scans.index')
-            ->with('success', count($scans).' scans iniciados com sucesso!');
+        if ($warning) {
+            $response->with('warning', $warning);
+        }
+
+        return $response;
     }
 
     public function show(Scan $scan)
@@ -158,5 +170,22 @@ class ScanController extends Controller
             'status' => 'pending',
             'progress' => 0,
         ], $extra));
+    }
+
+    private function envFileContainsKeys(string $content): bool
+    {
+        foreach (preg_split('/\R/', $content) as $line) {
+            $line = trim($line);
+
+            if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, ';')) {
+                continue;
+            }
+
+            if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*=\s*\S+/', $line)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

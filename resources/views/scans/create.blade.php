@@ -64,6 +64,10 @@
                 <input type="file" name="env_file" accept=".env,.txt"
                     class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <p class="text-sm text-gray-500 mt-1">Análise de variáveis sensíveis</p>
+                <p class="text-xs text-yellow-600 mt-1">
+                    Atenção: se o arquivo contiver chaves/segredos, alguns antivírus e firewalls podem bloquear o upload
+                    (erro ERR_ACCESS_DENIED). Se for bloqueado, envie o arquivo compactado em .zip pela opção "Upload Projeto".
+                </p>
             </div>
 
             <div class="mb-6 p-4 bg-gray-50 rounded-lg">

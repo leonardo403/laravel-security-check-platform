@@ -48,6 +48,15 @@ php artisan test
   - Docker: `docker/entrypoint.sh` runs the worker with a restart loop; `composer dev` listens with `--queue=scans,default`
 - Frontend fonts loaded via `bunny()` from `laravel-vite-plugin`
 
+## i18n
+
+- Locales: `pt_BR`, `es`, `en` (root locale `pt_BR`, fallback `en`). Dictionaries live in `lang/{pt_BR,es,en}/*.php` (`auth`, `common`, `dashboard`, `notification`, `plans`, `scans`, `validation`)
+- `app/Http/Middleware/SetLocale.php` resolves locale from session → cookie → `config('app.locale')`; registered globally on the `web` group in `bootstrap/app.php`. It also calls `Date::setLocale()` so `translatedFormat()` follows the language
+- Switching: `GET /locale/{locale}` (`locale.switch`); UI partial `layouts/language-switcher.blade.php` (accepts `$dark`), rendered in the auth navbar and the welcome/guest top-right
+- Plan names use FLAT keys `plans.name_<slug>` (NOT `plans.name.<slug>`) with `trans()->has()` fallback to the DB value; features use `plans.features_<feature>`. Dynamic keys for scans: `scans.status_*`, `scans.severity_*`, `scans.type_*`
+- Validation messages come from `lang/*/validation.php` via `StoreScanRequest::messages()`
+- Local env note: `.env` targets Docker-internal MySQL/Redis. For DB-free smoke tests override drivers: `SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync php artisan serve`
+
 ## Gotchas
 
 - `Subscription::plan()` requires the FK explicitly: `belongsTo(SubscriptionPlan::class, 'subscription_plan_id')` (column is not `plan_id`)

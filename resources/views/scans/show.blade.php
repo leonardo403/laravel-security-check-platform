@@ -2,52 +2,52 @@
 
 @section('content')
 <div class="mb-6">
-    <a href="{{ route('scans.index') }}" class="text-blue-600 hover:underline">&larr; Voltar</a>
+    <a href="{{ route('scans.index') }}" class="text-blue-600 hover:underline">&larr; {{ __('scans.back') }}</a>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Repositório</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('common.repository') }}</h3>
         <p class="text-lg font-bold truncate">{{ $scan->repository_url }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Tipo de Scan</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('scans.scan_type') }}</h3>
         <p class="text-lg font-bold">
             @if($scan->scan_type === 'repository')
-                Link do Repositório
+                {{ __('scans.repository_link') }}
             @elseif($scan->scan_type === 'env')
-                Upload .env
+                {{ __('scans.upload_env') }}
             @else
-                Upload Projeto
+                {{ __('scans.upload_project') }}
             @endif
         </p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Status</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('common.status') }}</h3>
         <span class="px-2 py-1 text-xs rounded
             @if($scan->status === 'completed') bg-green-100 text-green-800
             @elseif($scan->status === 'failed') bg-red-100 text-red-800
             @else bg-yellow-100 text-yellow-800
             @endif">
-            {{ $scan->status }}
+            {{ trans()->has('scans.status_'.$scan->status) ? __('scans.status_'.$scan->status) : $scan->status }}
         </span>
     </div>
 </div>
 
 @if(in_array($scan->status, ['pending', 'processing']))
 <div class="bg-white rounded-lg shadow p-6 mb-6" id="progress-container">
-    <h3 class="text-gray-700 font-medium mb-4">Progresso do Scan</h3>
+    <h3 class="text-gray-700 font-medium mb-4">{{ __('scans.scan_progress') }}</h3>
     <div class="w-full bg-gray-200 rounded-full h-4">
         <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-500"
              style="width: {{ $scan->progress }}%"></div>
     </div>
     <p class="text-sm text-gray-500 mt-2">
-        <span id="progress-text">{{ $scan->progress }}%</span> - 
+        <span id="progress-text">{{ $scan->progress }}%</span> -
         <span id="progress-status">
             @if($scan->status === 'pending')
-                Aguardando início...
+                {{ __('scans.waiting_to_start') }}
             @else
-                Processando...
+                {{ __('scans.processing') }}
             @endif
         </span>
     </p>
@@ -57,7 +57,7 @@
 @if($scan->result)
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Score</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('common.score') }}</h3>
         <p class="text-3xl font-bold
             @if($scan->result->score >= 80) text-green-600
             @elseif($scan->result->score >= 50) text-yellow-600
@@ -67,28 +67,28 @@
         </p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Duração</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('scans.duration') }}</h3>
         <p class="text-3xl font-bold">{{ $scan->result->duration_seconds }}s</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Dependências</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('scans.dependencies') }}</h3>
         <p class="text-3xl font-bold">{{ $scan->result->dependencies['total'] ?? '-' }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Desatualizadas</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('scans.outdated') }}</h3>
         <p class="text-3xl font-bold text-orange-600">{{ $scan->result->dependencies['outdated'] ?? '-' }}</p>
     </div>
 </div>
 
 @if(!empty($scan->result->vulnerabilities))
 <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-bold mb-4">Vulnerabilidades ({{ count($scan->result->vulnerabilities) }})</h2>
+    <h2 class="text-xl font-bold mb-4">{{ __('scans.vulnerabilities') }} ({{ count($scan->result->vulnerabilities) }})</h2>
     <table class="w-full">
         <thead>
             <tr class="text-left text-gray-500 bg-gray-50">
-                <th class="px-4 py-2">Nome</th>
-                <th class="px-4 py-2">Severidade</th>
-                <th class="px-4 py-2">Pacote</th>
+                <th class="px-4 py-2">{{ __('common.name') }}</th>
+                <th class="px-4 py-2">{{ __('scans.severity') }}</th>
+                <th class="px-4 py-2">{{ __('scans.package') }}</th>
                 <th class="px-4 py-2">CVE</th>
             </tr>
         </thead>
@@ -97,13 +97,16 @@
             <tr class="border-t">
                 <td class="px-4 py-2">{{ $vuln['name'] ?? '-' }}</td>
                 <td class="px-4 py-2">
+                    @php
+                        $severity = $vuln['severity'] ?? 'unknown';
+                    @endphp
                     <span class="px-2 py-1 text-xs rounded
-                        @if(($vuln['severity'] ?? '') === 'critical') bg-red-100 text-red-800
-                        @elseif(($vuln['severity'] ?? '') === 'high') bg-orange-100 text-orange-800
-                        @elseif(($vuln['severity'] ?? '') === 'medium') bg-yellow-100 text-yellow-800
+                        @if($severity === 'critical') bg-red-100 text-red-800
+                        @elseif($severity === 'high') bg-orange-100 text-orange-800
+                        @elseif($severity === 'medium') bg-yellow-100 text-yellow-800
                         @else bg-blue-100 text-blue-800
                         @endif">
-                        {{ $vuln['severity'] ?? '-' }}
+                        {{ trans()->has('scans.severity_'.$severity) ? __('scans.severity_'.$severity) : $severity }}
                     </span>
                 </td>
                 <td class="px-4 py-2 text-gray-600">{{ $vuln['package'] ?? '-' }}</td>
@@ -123,16 +126,16 @@
 @endphp
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold">Verificações de Segurança ({{ count($scan->result->config_checks) }})</h2>
+        <h2 class="text-xl font-bold">{{ __('scans.security_checks') }} ({{ count($scan->result->config_checks) }})</h2>
         <div class="flex gap-3 text-sm">
             @if($configFails->count() > 0)
-                <span class="text-red-600 font-medium">{{ $configFails->count() }} falha(s)</span>
+                <span class="text-red-600 font-medium">{{ __('scans.failures', ['count' => $configFails->count()]) }}</span>
             @endif
             @if($configWarnings->count() > 0)
-                <span class="text-yellow-600 font-medium">{{ $configWarnings->count() }} aviso(s)</span>
+                <span class="text-yellow-600 font-medium">{{ __('scans.warnings', ['count' => $configWarnings->count()]) }}</span>
             @endif
             @if($configPasses->count() > 0)
-                <span class="text-green-600 font-medium">{{ $configPasses->count() }} OK</span>
+                <span class="text-green-600 font-medium">{{ __('scans.ok', ['count' => $configPasses->count()]) }}</span>
             @endif
         </div>
     </div>
@@ -162,13 +165,16 @@
                 <div class="flex items-center gap-2">
                     <span class="font-medium text-gray-800">{{ $check['name'] }}</span>
                     @if($check['severity'] !== 'info')
+                        @php
+                            $severity = $check['severity'];
+                        @endphp
                         <span class="px-2 py-0.5 text-xs rounded
-                            @if($check['severity'] === 'critical') bg-red-200 text-red-800
-                            @elseif($check['severity'] === 'high') bg-orange-200 text-orange-800
-                            @elseif($check['severity'] === 'medium') bg-yellow-200 text-yellow-800
+                            @if($severity === 'critical') bg-red-200 text-red-800
+                            @elseif($severity === 'high') bg-orange-200 text-orange-800
+                            @elseif($severity === 'medium') bg-yellow-200 text-yellow-800
                             @else bg-blue-200 text-blue-800
                             @endif">
-                            {{ $check['severity'] }}
+                            {{ trans()->has('scans.severity_'.$severity) ? __('scans.severity_'.$severity) : $severity }}
                         </span>
                     @endif
                 </div>
@@ -182,14 +188,14 @@
 
 @if(!empty($scan->result->dependencies['packages']))
 <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-bold mb-4">Dependências</h2>
+    <h2 class="text-xl font-bold mb-4">{{ __('scans.dependencies') }}</h2>
     <table class="w-full">
         <thead>
             <tr class="text-left text-gray-500 bg-gray-50">
-                <th class="px-4 py-2">Pacote</th>
-                <th class="px-4 py-2">Versão</th>
-                <th class="px-4 py-2">Última</th>
-                <th class="px-4 py-2">Status</th>
+                <th class="px-4 py-2">{{ __('scans.package') }}</th>
+                <th class="px-4 py-2">{{ __('scans.version') }}</th>
+                <th class="px-4 py-2">{{ __('scans.latest') }}</th>
+                <th class="px-4 py-2">{{ __('common.status') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -200,9 +206,9 @@
                 <td class="px-4 py-2">{{ $pkg['latest'] ?? '-' }}</td>
                 <td class="px-4 py-2">
                     @if(empty($pkg['latest']) || $pkg['version'] === $pkg['latest'])
-                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Atual</span>
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">{{ __('scans.up_to_date') }}</span>
                     @else
-                        <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">Desatualizada</span>
+                        <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">{{ __('scans.outdated_dependency') }}</span>
                     @endif
                 </td>
             </tr>
@@ -213,12 +219,12 @@
 @endif
 
 <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-bold mb-2">Resumo</h2>
+    <h2 class="text-xl font-bold mb-2">{{ __('scans.summary') }}</h2>
     <p class="text-gray-700">{{ $scan->result->summary }}</p>
 </div>
 @else
 <div class="bg-white rounded-lg shadow p-12 text-center" id="waiting-container">
-    <p class="text-gray-500 text-lg">Aguardando resultado do scan...</p>
+    <p class="text-gray-500 text-lg">{{ __('scans.waiting_result') }}</p>
 </div>
 @endif
 
@@ -232,18 +238,20 @@
     const progressContainer = document.getElementById('progress-container');
     const waitingContainer = document.getElementById('waiting-container');
 
-    const statusMessages = {
-        5: 'Preparando scan...',
-        10: 'Carregando fonte...',
-        15: 'Fonte carregada...',
-        20: 'Análise iniciada...',
-        30: 'Analisando dependências...',
-        45: 'Verificando vulnerabilidades...',
-        65: 'Analisando configurações...',
-        85: 'Calculando score...',
-        95: 'Gerando relatório...',
-        100: 'Concluído!'
-    };
+    const statusMessages = @json([
+        5 => __('scans.preparing'),
+        10 => __('scans.loading_source'),
+        15 => __('scans.source_loaded'),
+        20 => __('scans.analysis_started'),
+        30 => __('scans.analyzing_dependencies'),
+        45 => __('scans.analyzing_vulnerabilities'),
+        65 => __('scans.checking_configurations'),
+        85 => __('scans.calculating_score'),
+        95 => __('scans.generating_report'),
+        100 => __('scans.finished'),
+    ]);
+
+    const processingLabel = '{{ __('scans.processing') }}';
 
     function pollProgress() {
         fetch(`/scans/${scanId}/progress`)
@@ -251,7 +259,7 @@
             .then(data => {
                 progressBar.style.width = data.progress + '%';
                 progressText.textContent = data.progress + '%';
-                progressStatus.textContent = statusMessages[data.progress] || 'Processando...';
+                progressStatus.textContent = statusMessages[data.progress] || processingLabel;
 
                 if (data.progress < 100 && data.status !== 'failed') {
                     setTimeout(pollProgress, 2000);

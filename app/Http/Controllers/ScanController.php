@@ -48,7 +48,7 @@ class ScanController extends Controller
         $hasUpload = $request->hasFile('project_file');
 
         if (! $hasRepo && ! $hasEnv && ! $hasUpload) {
-            return back()->with('error', 'Envie pelo menos uma fonte para scanear.');
+            return back()->with('error', __('scans.provide_source'));
         }
 
         $totalNew = ($hasRepo ? 1 : 0) + ($hasEnv ? 1 : 0) + ($hasUpload ? 1 : 0);
@@ -56,7 +56,7 @@ class ScanController extends Controller
         $plan = $user->activeSubscription()?->plan;
 
         if (! $plan) {
-            return back()->with('error', 'Você não possui um plano ativo. Assine um plano para realizar scans.');
+            return back()->with('error', __('scans.no_active_plan_scan'));
         }
 
         $scansThisMonth = $user->scans()
@@ -66,11 +66,11 @@ class ScanController extends Controller
         $remaining = $plan->max_scans_per_month - $scansThisMonth;
 
         if ($remaining <= 0) {
-            return back()->with('error', 'Você atingiu o limite de '.$plan->max_scans_per_month.' scans do seu plano este mês.');
+            return back()->with('error', __('scans.scan_limit_reached_msg', ['max' => $plan->max_scans_per_month]));
         }
 
         if ($totalNew > $remaining) {
-            return back()->with('error', 'Você tem apenas '.$remaining.' scan(s) restante(s) este mês. Tente enviar menos arquivos.');
+            return back()->with('error', __('scans.few_scans_left_msg', ['count' => $remaining]));
         }
 
         if ($hasRepo) {
@@ -85,7 +85,7 @@ class ScanController extends Controller
             $envPath = $envFile->store('scans/env', 'local');
 
             if ($this->envFileContainsKeys($envFile->get())) {
-                $warning = 'O arquivo .env enviado contém chaves de configuração. Alguns antivírus e ferramentas de segurança bloqueiam uploads de arquivos com segredos (erro ERR_ACCESS_DENIED). Se o upload for bloqueado, envie o arquivo compactado em .zip pela opção "Upload Projeto".';
+                $warning = __('scans.env_keys_warning');
             }
 
             $scans[] = $this->createScan($user, 'env', [
@@ -111,11 +111,11 @@ class ScanController extends Controller
         if (count($scans) === 1) {
             $response = redirect()
                 ->route('scans.show', $scans[0])
-                ->with('success', 'Scan iniciado com sucesso!');
+                ->with('success', __('scans.scan_started'));
         } else {
             $response = redirect()
                 ->route('scans.index')
-                ->with('success', count($scans).' scans iniciados com sucesso!');
+                ->with('success', __('scans.scans_started', ['count' => count($scans)]));
         }
 
         if ($warning) {
@@ -160,7 +160,7 @@ class ScanController extends Controller
 
         return redirect()
             ->route('scans.index')
-            ->with('success', 'Scan removido com sucesso!');
+            ->with('success', __('scans.scan_removed'));
     }
 
     private function createScan($user, string $type, array $extra): Scan

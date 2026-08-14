@@ -5,11 +5,11 @@
 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
     <div class="flex items-center justify-between">
         <div>
-            <p class="font-medium">Sua assinatura expirou.</p>
-            <p class="text-sm">Renove seu plano para voltar a realizar scans.</p>
+            <p class="font-medium">{{ __('dashboard.subscription_expired') }}</p>
+            <p class="text-sm">{{ __('dashboard.renew_to_scan') }}</p>
         </div>
         <a href="{{ route('plans.index') }}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm whitespace-nowrap">
-            Renovar Plano
+            {{ __('dashboard.renew_plan') }}
         </a>
     </div>
 </div>
@@ -19,12 +19,12 @@
     <div class="flex items-center justify-between">
         @if($stats['plan'])
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg px-6 py-3 shadow">
-            <div class="text-sm opacity-80">Plano Atual</div>
-            <div class="text-xl font-bold">{{ $stats['plan']->name }}</div>
+            <div class="text-sm opacity-80">{{ __('dashboard.current_plan') }}</div>
+            <div class="text-xl font-bold">{{ trans()->has('plans.name_'.$stats['plan']->slug) ? __('plans.name_'.$stats['plan']->slug) : $stats['plan']->name }}</div>
         </div>
         @else
         <a href="{{ route('plans.index') }}" class="bg-yellow-500 text-white rounded-lg px-6 py-3 shadow hover:bg-yellow-600 transition">
-            Assinar Plano
+            {{ __('dashboard.subscribe_plan') }}
         </a>
         @endif
     </div>
@@ -33,9 +33,9 @@
 @if($stats['plan'])
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
-        <h3 class="font-medium text-gray-700">Uso Mensal - {{ ucfirst(now()->locale('pt_BR')->translatedFormat('F')) }}</h3>
+        <h3 class="font-medium text-gray-700">{{ __('dashboard.monthly_usage') }} - {{ ucfirst(now()->translatedFormat('F')) }}</h3>
         <span class="text-sm text-gray-500">
-            {{ $stats['scans_this_month'] }} de {{ $stats['max_scans_per_month'] }} scans utilizados
+            {{ __('dashboard.of_scans_used', ['used' => $stats['scans_this_month'], 'max' => $stats['max_scans_per_month']]) }}
         </span>
     </div>
     <div class="w-full bg-gray-200 rounded-full h-4">
@@ -52,12 +52,12 @@
              style="width: {{ min(100, $usagePercent) }}%"></div>
     </div>
     <div class="flex justify-between mt-2 text-sm text-gray-500">
-        <span>{{ number_format($usagePercent, 0) }}% utilizado</span>
-        <span>{{ $stats['scans_remaining'] }} restante(s)</span>
+        <span>{{ __('dashboard.percent_used', ['percent' => number_format($usagePercent, 0)]) }}</span>
+        <span>{{ __('dashboard.remaining', ['count' => $stats['scans_remaining']]) }}</span>
     </div>
     @if($stats['scans_remaining'] <= 0)
     <div class="mt-3 text-red-600 text-sm font-medium">
-        Limite atingido. <a href="{{ route('plans.index') }}" class="underline">Faça upgrade do seu plano</a>.
+        {{ __('dashboard.limit_reached') }} <a href="{{ route('plans.index') }}" class="underline">{{ __('dashboard.upgrade_plan') }}</a>.
     </div>
     @endif
 </div>
@@ -65,32 +65,32 @@
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Total Scans</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('dashboard.total_scans') }}</h3>
         <p class="text-3xl font-bold">{{ $stats['total_scans'] }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Completos</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('dashboard.completed') }}</h3>
         <p class="text-3xl font-bold text-green-600">{{ $stats['completed_scans'] }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Falhos</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('dashboard.failed') }}</h3>
         <p class="text-3xl font-bold text-red-600">{{ $stats['failed_scans'] }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-gray-500 text-sm">Score Médio</h3>
+        <h3 class="text-gray-500 text-sm">{{ __('dashboard.average_score') }}</h3>
         <p class="text-3xl font-bold text-blue-600">{{ number_format($stats['average_score'], 1) }}%</p>
     </div>
 </div>
 
 <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-bold mb-4">Scans Recentes</h2>
+    <h2 class="text-xl font-bold mb-4">{{ __('dashboard.recent_scans') }}</h2>
     <table class="w-full">
         <thead>
             <tr class="text-left text-gray-500">
-                <th class="pb-2">Repositório</th>
-                <th class="pb-2">Status</th>
-                <th class="pb-2">Score</th>
-                <th class="pb-2">Data</th>
+                <th class="pb-2">{{ __('common.repository') }}</th>
+                <th class="pb-2">{{ __('common.status') }}</th>
+                <th class="pb-2">{{ __('common.score') }}</th>
+                <th class="pb-2">{{ __('common.date') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -103,7 +103,7 @@
                         @elseif($scan->status === 'failed') bg-red-100 text-red-800
                         @else bg-yellow-100 text-yellow-800
                         @endif">
-                        {{ $scan->status }}
+                        {{ trans()->has('scans.status_'.$scan->status) ? __('scans.status_'.$scan->status) : $scan->status }}
                     </span>
                 </td>
                 <td class="py-2">{{ $scan->result->score ?? '-' }}</td>

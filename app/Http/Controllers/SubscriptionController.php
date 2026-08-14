@@ -13,18 +13,18 @@ class SubscriptionController extends Controller
         $paymentIntent = $request->query('payment_intent');
 
         if (! $paymentIntent) {
-            return redirect()->route('plans.index')->with('error', 'Pagamento não encontrado.');
+            return redirect()->route('plans.index')->with('error', __('plans.payment_not_found'));
         }
 
         $user = $request->user();
         $subscription = $user->subscription;
 
         if (! $subscription || $subscription->stripe_payment_intent_id !== $paymentIntent) {
-            return redirect()->route('plans.index')->with('error', 'Pagamento não localizado para a sua conta.');
+            return redirect()->route('plans.index')->with('error', __('plans.payment_not_located'));
         }
 
         if (! $stripe->isPaymentIntentSucceeded($paymentIntent)) {
-            return redirect()->route('plans.index')->with('error', 'O pagamento não foi confirmado. Tente novamente.');
+            return redirect()->route('plans.index')->with('error', __('plans.payment_not_confirmed'));
         }
 
         $subscription->update([
@@ -34,6 +34,6 @@ class SubscriptionController extends Controller
             'expires_at' => now()->addMonth(),
         ]);
 
-        return redirect()->route('plans.index')->with('success', 'Assinatura ativada com sucesso!');
+        return redirect()->route('plans.index')->with('success', __('plans.subscription_activated'));
     }
 }

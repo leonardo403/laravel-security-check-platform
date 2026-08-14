@@ -28,17 +28,17 @@ class PlansController extends Controller
     public function checkout(Request $request, SubscriptionPlan $plan, StripePaymentService $stripe)
     {
         if (! $plan->isActive()) {
-            return redirect()->route('plans.index')->with('error', 'Este plano não está mais disponível.');
+            return redirect()->route('plans.index')->with('error', __('plans.plan_unavailable'));
         }
 
         $user = $request->user();
 
         if ($user->activeSubscription()?->subscription_plan_id === $plan->id) {
-            return redirect()->route('plans.index')->with('info', "Você já está assinando o plano {$plan->name}.");
+            return redirect()->route('plans.index')->with('info', __('plans.already_subscribed', ['plan' => $plan->name]));
         }
 
         if (! $stripe->isConfigured()) {
-            return back()->with('error', 'O pagamento via Stripe ainda não está configurado. Defina STRIPE_SECRET_KEY e STRIPE_PUBLISHABLE_KEY no arquivo .env.');
+            return back()->with('error', __('plans.stripe_not_configured'));
         }
 
         $intent = $stripe->createPaymentIntent($plan, $user);

@@ -29,7 +29,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Credenciais inválidas.',
+            'email' => __('auth.invalid_credentials'),
         ])->onlyInput('email');
     }
 
@@ -54,7 +54,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect('/dashboard')->with('success', 'Cadastro realizado com sucesso!');
+        return redirect('/dashboard')->with('success', __('auth.registration_success'));
     }
 
     public function logout(Request $request)
@@ -81,8 +81,8 @@ class AuthController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', 'Enviamos por e-mail o link de redefinição de senha.')
-            : back()->withErrors(['email' => 'Não encontramos uma conta com este e-mail.']);
+            ? back()->with('status', __('auth.reset_link_sent'))
+            : back()->withErrors(['email' => __('auth.no_account_found')]);
     }
 
     public function showResetPasswordForm(Request $request, string $token)
@@ -110,7 +110,7 @@ class AuthController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-            ? redirect('/dashboard')->with('success', 'Senha redefinida com sucesso!')
-            : back()->withErrors(['email' => 'O token de redefinição é inválido ou expirou.']);
+            ? redirect('/dashboard')->with('success', __('auth.password_reset_success'))
+            : back()->withErrors(['email' => __('auth.invalid_token')]);
     }
 }

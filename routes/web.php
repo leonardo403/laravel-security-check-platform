@@ -12,6 +12,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/locale/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, \App\Http\Middleware\SetLocale::LOCALES, true), 404);
+
+    session(['locale' => $locale]);
+    cookie()->queue('locale', $locale, 60 * 24 * 365);
+
+    return redirect()->back();
+})->name('locale.switch');
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');

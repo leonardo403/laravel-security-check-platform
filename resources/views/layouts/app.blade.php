@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Platform MVP</title>
+    <title>{{ __('common.app_name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
@@ -13,15 +13,16 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <span class="text-xl font-bold text-gray-800">🔒 Security Platform</span>
+                        <span class="text-xl font-bold text-gray-800">🔒 {{ __('common.app_name') }}</span>
                     </div>
                     <div class="ml-10 flex items-center space-x-4">
-                        <a href="/dashboard" class="text-gray-700 hover:text-gray-900">Dashboard</a>
-                        <a href="/scans" class="text-gray-700 hover:text-gray-900">Scans</a>
-                        <a href="/plans" class="text-gray-700 hover:text-gray-900">Planos</a>
+                        <a href="/dashboard" class="text-gray-700 hover:text-gray-900">{{ __('common.dashboard') }}</a>
+                        <a href="/scans" class="text-gray-700 hover:text-gray-900">{{ __('common.scans') }}</a>
+                        <a href="/plans" class="text-gray-700 hover:text-gray-900">{{ __('common.plans') }}</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    @include('layouts.language-switcher')
                     @php
                         $authSubscription = auth()->user()->subscription;
                         $plan = $authSubscription?->isActive() ? $authSubscription->plan : null;
@@ -33,20 +34,24 @@
                             @elseif($plan->slug === 'medium') bg-purple-100 text-purple-800
                             @else bg-gray-100 text-gray-800
                             @endif">
-                            {{ $plan->name }}
+                            {{ trans()->has('plans.name_'.$plan->slug) ? __('plans.name_'.$plan->slug) : $plan->name }}
                         </span>
                     @elseif($subExpired)
-                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Plano Expirado</span>
+                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ __('common.expired_plan') }}</span>
                     @endif
                     <span class="text-sm text-gray-600">{{ auth()->user()->name }}</span>
                     <form method="POST" action="/logout">
                         @csrf
-                        <button type="submit" class="text-sm text-red-600">Sair</button>
+                        <button type="submit" class="text-sm text-red-600">{{ __('common.logout') }}</button>
                     </form>
                 </div>
             </div>
         </div>
     </nav>
+    @else
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-end">
+        @include('layouts.language-switcher')
+    </div>
     @endauth
 
     <main class="max-w-7xl mx-auto py-6 px-4">

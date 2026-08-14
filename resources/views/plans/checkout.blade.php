@@ -3,19 +3,19 @@
 @section('content')
 <div class="max-w-lg mx-auto">
     <div class="bg-white rounded-lg shadow p-6">
-        <h1 class="text-2xl font-bold mb-1">Assinar {{ $plan->name }}</h1>
-        <p class="text-4xl font-bold my-4">R$ {{ number_format($plan->price, 2) }}<span class="text-sm text-gray-500">/mês</span></p>
+        <h1 class="text-2xl font-bold mb-1">{{ __('plans.subscribe_plan', ['plan' => trans()->has('plans.name_'.$plan->slug) ? __('plans.name_'.$plan->slug) : $plan->name]) }}</h1>
+        <p class="text-4xl font-bold my-4">R$ {{ number_format($plan->price, 2) }}<span class="text-sm text-gray-500">{{ __('plans.per_month') }}</span></p>
 
         <div class="mb-6 space-y-2">
             <li class="flex items-center">
                 <span class="mr-2">✓</span>
-                {{ $plan->max_scans_per_month }} scans/mês
+                {{ __('plans.scans_per_month', ['count' => $plan->max_scans_per_month]) }}
             </li>
             @foreach($plan->features as $feature => $enabled)
                 @if($enabled)
                 <li class="flex items-center">
                     <span class="mr-2">✓</span>
-                    {{ ucfirst(str_replace('_', ' ', $feature)) }}
+                    {{ trans()->has('plans.features_'.$feature) ? __('plans.features_'.$feature) : ucfirst(str_replace('_', ' ', $feature)) }}
                 </li>
                 @endif
             @endforeach
@@ -26,11 +26,11 @@
 
         <button id="submit"
             class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-            Pagar R$ {{ number_format($plan->price, 2) }}
+            {{ __('plans.pay', ['amount' => number_format($plan->price, 2)]) }}
         </button>
 
         <p class="text-xs text-gray-500 mt-4 text-center">
-            Pagamento seguro processado pelo Stripe. Você será redirecionado após a confirmação.
+            {{ __('plans.secure_payment') }}
         </p>
     </div>
 </div>
@@ -82,7 +82,7 @@
             const paymentIntentId = clientSecret.split('_secret_')[0];
             window.location.href = returnUrl + '?payment_intent=' + paymentIntentId;
         } catch (err) {
-            message.textContent = err.message || 'Ocorreu um erro ao processar o pagamento. Tente novamente.';
+            message.textContent = err.message || '{{ __('plans.payment_error') }}';
             message.classList.remove('hidden');
             submitButton.disabled = false;
         }

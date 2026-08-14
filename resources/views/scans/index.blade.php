@@ -124,12 +124,12 @@
                 <td class="px-6 py-4 text-right">
                     <a href="{{ route('scans.show', $scan) }}" class="text-blue-600 hover:underline mr-3">Ver</a>
                     @if(!in_array($scan->status, ['pending', 'processing']))
-                    <form action="{{ route('scans.destroy', $scan) }}" method="POST" class="inline"
+                    <!--form action="{{ route('scans.destroy', $scan) }}" method="POST" class="inline"
                           onsubmit="return confirm('Tem certeza que deseja excluir este scan?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-600 hover:underline">Excluir</button>
-                    </form>
+                    </form-->
                     @endif
                 </td>
             </tr>

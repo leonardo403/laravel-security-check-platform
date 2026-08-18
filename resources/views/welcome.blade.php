@@ -6,12 +6,12 @@
     <title>{{ __('common.app_name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
+<body class="min-h-screen text-white flex items-center justify-center px-6 relative" style="background: url('{{ asset('images/SecurityScan.png') }}') no-repeat center center/cover;    background-position: top;">
+    <div class="absolute inset-0 bg-slate-950/70 -z-10"></div>
     <div class="absolute top-6 right-6">
         @include('layouts.language-switcher', ['dark' => true])
     </div>
     <div class="max-w-2xl w-full bg-slate-900/80 border border-slate-700 rounded-2xl shadow-2xl p-10 text-center">
-        <p class="text-sm uppercase tracking-[0.3em] text-cyan-400 mb-4">MVP</p>
         <h1 class="text-4xl font-bold mb-4">{{ __('common.app_name') }}</h1>
         <p class="text-lg text-slate-300 mb-8">
             {{ __('auth.welcome_tagline') }}

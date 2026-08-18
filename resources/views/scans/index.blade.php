@@ -145,7 +145,7 @@
 
 <script>
 (function() {
-    const statusMessages = @json([
+    const statusMessages = {!! json_encode([
         5 => __('scans.preparing'),
         10 => __('scans.loading_source'),
         15 => __('scans.source_loaded'),
@@ -156,7 +156,7 @@
         85 => __('scans.calculating_score'),
         95 => __('scans.generating_report'),
         100 => __('scans.finished'),
-    ]);
+    ]) !!};
 
     const messages = {
         preparing: '{{ __('scans.preparing') }}',

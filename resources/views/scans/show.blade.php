@@ -238,18 +238,18 @@
     const progressContainer = document.getElementById('progress-container');
     const waitingContainer = document.getElementById('waiting-container');
 
-    const statusMessages = @json([
-        5 => __('scans.preparing'),
-        10 => __('scans.loading_source'),
-        15 => __('scans.source_loaded'),
-        20 => __('scans.analysis_started'),
-        30 => __('scans.analyzing_dependencies'),
-        45 => __('scans.analyzing_vulnerabilities'),
-        65 => __('scans.checking_configurations'),
-        85 => __('scans.calculating_score'),
-        95 => __('scans.generating_report'),
-        100 => __('scans.finished'),
-    ]);
+    const statusMessages = {
+        5: '{{ __('scans.preparing') }}',
+        10: '{{ __('scans.loading_source') }}',
+        15: '{{ __('scans.source_loaded') }}',
+        20: '{{ __('scans.analysis_started') }}',
+        30: '{{ __('scans.analyzing_dependencies') }}',
+        45: '{{ __('scans.analyzing_vulnerabilities') }}',
+        65: '{{ __('scans.checking_configurations') }}',
+        85: '{{ __('scans.calculating_score') }}',
+        95: '{{ __('scans.generating_report') }}',
+        100: '{{ __('scans.finished') }}',
+    };
 
     const processingLabel = '{{ __('scans.processing') }}';
 

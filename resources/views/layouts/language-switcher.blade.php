@@ -1,18 +1,18 @@
 @php
     $dark = $dark ?? false;
     $labels = [
-        'pt_BR' => 'Português',
-        'es' => 'Español',
-        'en' => 'English',
+        'pt_BR' => 'PT',
+        'es' => 'ES',
+        'en' => 'EN',
     ];
 @endphp
-<div class="flex items-center gap-1 text-xs">
+<div class="flex items-center gap-1 p-0.5 rounded-lg @if($dark) bg-slate-800/60 border border-slate-700/30 @else bg-slate-800/60 border border-slate-700/30 @endif">
     @foreach(\App\Http\Middleware\SetLocale::LOCALES as $code)
         @php($active = app()->getLocale() === $code)
         <a href="{{ route('locale.switch', $code) }}"
-           class="px-2 py-1 rounded transition {{ $active
-               ? ($dark ? 'bg-cyan-500 text-slate-950' : 'bg-cyan-500 text-white')
-               : ($dark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300') }}">
+           class="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 {{ $active
+               ? 'bg-teal-500/20 text-teal-400 shadow-sm'
+               : 'text-slate-500 hover:text-slate-300' }}">
             {{ $labels[$code] }}
         </a>
     @endforeach

@@ -12,8 +12,8 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'Básico',
                 'slug' => 'basic',
-                'price' => 19.90,
-                'max_scans_per_month' => 5,
+                'price' => 5.00,
+                'max_scans_per_month' => 4,
                 'features' => json_encode([
                     'scan_security' => true,
                     'report_basic' => true,
@@ -25,8 +25,8 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'Médio',
                 'slug' => 'medium',
-                'price' => 59.90,
-                'max_scans_per_month' => 25,
+                'price' => 15.00,
+                'max_scans_per_month' => 10,
                 'features' => json_encode([
                     'scan_security' => true,
                     'scan_dependencies' => true,
@@ -41,8 +41,8 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'Premium',
                 'slug' => 'premium',
-                'price' => 99.90,
-                'max_scans_per_month' => 100,
+                'price' => 45.00,
+                'max_scans_per_month' => 20,
                 'features' => json_encode([
                     'scan_security' => true,
                     'scan_dependencies' => true,

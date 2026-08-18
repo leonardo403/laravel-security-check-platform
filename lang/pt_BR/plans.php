@@ -14,7 +14,7 @@ return [
     'renew_plan' => 'Renovar :plan',
     'subscribe_plan' => 'Assinar :plan',
     'subscribe' => 'Assinar',
-    'pay' => 'Pagar R$ :amount',
+    'pay' => 'Pagar $:amount',
     'secure_payment' => 'Pagamento seguro processado pelo Stripe. Você será redirecionado após a confirmação.',
     'payment_error' => 'Ocorreu um erro ao processar o pagamento. Tente novamente.',
     'name_basic' => 'Básico',

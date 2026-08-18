@@ -43,7 +43,7 @@
 
         <h3 class="text-xl font-bold text-white mt-2">{{ $planName }}</h3>
         <div class="mt-4 mb-6">
-            <span class="text-4xl font-bold text-white">R$ {{ number_format($plan->price, 2) }}</span>
+            <span class="text-4xl font-bold text-white">${{ number_format($plan->price, 2) }}</span>
             <span class="text-sm text-slate-500">{{ __('plans.per_month') }}</span>
         </div>
 

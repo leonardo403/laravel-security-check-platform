@@ -26,7 +26,7 @@ class StripePaymentService
     {
         $intent = $this->client()->paymentIntents->create([
             'amount' => $this->amountInCents($plan),
-            'currency' => 'brl',
+            'currency' => 'usd',
             'automatic_payment_methods' => ['enabled' => true],
             'metadata' => [
                 'plan_id' => (string) $plan->id,

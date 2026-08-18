@@ -12,7 +12,7 @@
     <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-8 backdrop-blur-sm">
         <h1 class="text-xl font-bold text-white mb-1">{{ __('plans.subscribe_plan', ['plan' => trans()->has('plans.name_'.$plan->slug) ? __('plans.name_'.$plan->slug) : $plan->name]) }}</h1>
         <div class="mt-3 mb-6">
-            <span class="text-3xl font-bold text-white">R$ {{ number_format($plan->price, 2) }}</span>
+            <span class="text-3xl font-bold text-white">${{ number_format($plan->price, 2) }}</span>
             <span class="text-sm text-slate-500">{{ __('plans.per_month') }}</span>
         </div>
 

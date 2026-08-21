@@ -35,7 +35,7 @@ return [
     'features_ci_cd_integration' => 'Integração CI/CD',
     'plan_unavailable' => 'Este plano não está mais disponível.',
     'already_subscribed' => 'Você já está assinando o plano :plan.',
-    'stripe_not_configured' => 'O pagamento via Stripe ainda não está configurado. Defina STRIPE_SECRET_KEY e STRIPE_PUBLISHABLE_KEY no arquivo .env.',
+    'stripe_not_configured' => 'O pagamento via Stripe ainda não está configurado.',
     'payment_not_found' => 'Pagamento não encontrado.',
     'payment_not_located' => 'Pagamento não localizado para a sua conta.',
     'payment_not_confirmed' => 'O pagamento não foi confirmado. Tente novamente.',

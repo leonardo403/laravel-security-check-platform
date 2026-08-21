@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreScanRequest;
 use App\Jobs\ProcessScan;
 use App\Models\Scan;
+use App\Models\SubscriptionPlan;
+use App\Services\Scanner\ScanModule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -32,8 +34,9 @@ class ScanController extends Controller
         $plan = $user->activeSubscription()?->plan;
         $scansThisMonth = $user->scans()->whereMonth('created_at', now()->month)->count();
         $scansRemaining = $plan ? max(0, $plan->max_scans_per_month - $scansThisMonth) : 0;
+        $scanOptions = $this->planScanOptions($plan);
 
-        return view('scans.create', compact('plan', 'scansThisMonth', 'scansRemaining'));
+        return view('scans.create', compact('plan', 'scansThisMonth', 'scansRemaining', 'scanOptions'));
     }
 
     public function store(StoreScanRequest $request)
@@ -73,11 +76,16 @@ class ScanController extends Controller
             return back()->with('error', __('scans.few_scans_left_msg', ['count' => $remaining]));
         }
 
+        $planModules = array_map(
+            fn (ScanModule $module) => $module->value,
+            $plan->scanModules()
+        );
+
         if ($hasRepo) {
             $scans[] = $this->createScan($user, 'repository', [
                 'repository_url' => $validated['repository_url'],
                 'branch' => $validated['branch'] ?? 'main',
-            ]);
+            ], $planModules);
         }
 
         if ($hasEnv) {
@@ -91,7 +99,7 @@ class ScanController extends Controller
             $scans[] = $this->createScan($user, 'env', [
                 'env_file_path' => $envPath,
                 'repository_url' => 'env-upload://'.$envFile->getClientOriginalName(),
-            ]);
+            ], $planModules);
         }
 
         if ($hasUpload) {
@@ -100,7 +108,7 @@ class ScanController extends Controller
             $scans[] = $this->createScan($user, 'upload', [
                 'project_upload_path' => $projectPath,
                 'repository_url' => 'project-upload://'.$projectFile->getClientOriginalName(),
-            ]);
+            ], $planModules);
         }
 
         foreach ($scans as $scan) {
@@ -163,13 +171,26 @@ class ScanController extends Controller
             ->with('success', __('scans.scan_removed'));
     }
 
-    private function createScan($user, string $type, array $extra): Scan
+    private function createScan($user, string $type, array $extra, array $modules = []): Scan
     {
         return $user->scans()->create(array_merge([
             'scan_type' => $type,
             'status' => 'pending',
             'progress' => 0,
+            'modules' => $modules,
         ], $extra));
+    }
+
+    private function planScanOptions(?SubscriptionPlan $plan): array
+    {
+        $enabled = $plan?->scanModules() ?? [];
+
+        return collect(ScanModule::cases())
+            ->map(fn (ScanModule $module) => [
+                'key' => $module->value,
+                'enabled' => in_array($module, $enabled, true),
+            ])
+            ->all();
     }
 
     private function envFileContainsKeys(string $content): bool

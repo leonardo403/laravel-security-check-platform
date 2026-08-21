@@ -8,15 +8,21 @@ use Illuminate\Support\Facades\Log;
 
 class SecurityScanner
 {
+    private array $modules;
+
     public function scan(string $repositoryPath, Scan $scan, ?callable $onProgress = null): ScanResult
     {
         Log::info("Starting scan for: {$scan->repository_url}", ['type' => $scan->scan_type]);
+
+        $this->modules = $this->resolveModules($scan);
 
         $startTime = microtime(true);
 
         $this->updateProgress($onProgress, 30);
 
-        $dependencies = $this->analyzeDependencies($repositoryPath);
+        $dependencies = $this->isEnabled(ScanModule::Dependencies)
+            ? $this->analyzeDependencies($repositoryPath)
+            : $this->skippedDependencies();
 
         $this->updateProgress($onProgress, 45);
 
@@ -25,7 +31,9 @@ class SecurityScanner
 
         $this->updateProgress($onProgress, 65);
 
-        $configChecks = $this->analyzeConfig($repositoryPath);
+        $configChecks = $this->isEnabled(ScanModule::Security)
+            ? $this->analyzeConfig($repositoryPath)
+            : [];
 
         $this->updateProgress($onProgress, 85);
 
@@ -34,7 +42,7 @@ class SecurityScanner
 
         $this->updateProgress($onProgress, 95);
 
-        Log::info("Scan completed with score: {$score}");
+        Log::info("Scan completed with score: {$score}", ['modules' => $this->moduleValues()]);
 
         return ScanResult::create([
             'scan_id' => $scan->id,
@@ -45,6 +53,53 @@ class SecurityScanner
             'duration_seconds' => round($duration, 2),
             'summary' => $this->generateSummary($vulnerabilities, $dependencies, $configChecks, $score),
         ]);
+    }
+
+    public function enabledModules(): array
+    {
+        return $this->modules;
+    }
+
+    private function resolveModules(Scan $scan): array
+    {
+        $values = $scan->modules;
+
+        if (! is_array($values) || $values === []) {
+            return ScanModule::cases();
+        }
+
+        $modules = [];
+
+        foreach ($values as $value) {
+            $module = ScanModule::tryFrom((string) $value);
+
+            if ($module !== null) {
+                $modules[] = $module;
+            }
+        }
+
+        return $modules === [] ? ScanModule::cases() : $modules;
+    }
+
+    private function isEnabled(ScanModule $module): bool
+    {
+        return in_array($module, $this->modules, true);
+    }
+
+    private function moduleValues(): array
+    {
+        return array_map(fn (ScanModule $module) => $module->value, $this->modules);
+    }
+
+    private function skippedDependencies(): array
+    {
+        return [
+            'total' => 0,
+            'outdated' => 0,
+            'vulnerable' => 0,
+            'packages' => [],
+            'skipped' => true,
+        ];
     }
 
     private function analyzeConfig(string $path): array
@@ -61,9 +116,32 @@ class SecurityScanner
 
     private function analyzeVulnerabilities(string $path, array $dependencies): array
     {
-        $dependencyVulnerabilities = (new VulnerabilityChecker)->check($dependencies['packages'] ?? []);
+        $dependencyVulnerabilities = [];
 
-        $codeVulnerabilities = (new CodePatternAnalyzer)->analyze($path);
+        if ($this->isEnabled(ScanModule::Dependencies) && ! empty($dependencies['packages'])) {
+            $dependencyVulnerabilities = (new VulnerabilityChecker)->check($dependencies['packages']);
+        }
+
+        if (! $this->isEnabled(ScanModule::CodeQuality) && ! $this->isEnabled(ScanModule::Secrets)) {
+            return $dependencyVulnerabilities;
+        }
+
+        $allowedCategories = [];
+
+        if ($this->isEnabled(ScanModule::CodeQuality)) {
+            $allowedCategories[] = CodePatternAnalyzer::CATEGORY_CODE_QUALITY;
+        }
+
+        if ($this->isEnabled(ScanModule::Secrets)) {
+            $allowedCategories[] = CodePatternAnalyzer::CATEGORY_SECRETS;
+        }
+
+        $codeFindings = (new CodePatternAnalyzer)->analyze($path);
+
+        $codeVulnerabilities = array_values(array_filter(
+            $codeFindings,
+            fn (array $finding) => in_array($finding['category'] ?? CodePatternAnalyzer::CATEGORY_CODE_QUALITY, $allowedCategories, true)
+        ));
 
         return array_merge($dependencyVulnerabilities, $codeVulnerabilities);
     }
@@ -129,6 +207,28 @@ class SecurityScanner
 
         if ($configFails > 0 || $configWarnings > 0) {
             $summary .= " Config checks: {$configFails} failures, {$configWarnings} warnings.";
+        }
+
+        $skipped = [];
+
+        if (! $this->isEnabled(ScanModule::Security)) {
+            $skipped[] = 'config checks';
+        }
+
+        if (! $this->isEnabled(ScanModule::Dependencies)) {
+            $skipped[] = 'dependency analysis';
+        }
+
+        if (! $this->isEnabled(ScanModule::Secrets)) {
+            $skipped[] = 'secrets detection';
+        }
+
+        if (! $this->isEnabled(ScanModule::CodeQuality)) {
+            $skipped[] = 'code pattern analysis';
+        }
+
+        if ($skipped !== []) {
+            $summary .= ' Not included in this scan: '.implode(', ', $skipped).'.';
         }
 
         return $summary;

@@ -48,6 +48,41 @@
     <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm">
         <h2 class="text-xl font-bold text-white mb-6">{{ __('scans.new_security_scan') }}</h2>
 
+        @if($plan && $scanOptions)
+        <div class="mb-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700/30">
+            <h3 class="font-medium text-slate-200 mb-1 flex items-center gap-2">
+                <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {{ __('scans.scan_options') }}
+            </h3>
+            <p class="text-xs text-slate-500 mb-3">{{ __('scans.scan_options_desc', ['plan' => $plan->name]) }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                @foreach($scanOptions as $option)
+                <div class="flex items-start gap-2.5 p-2.5 rounded-lg border @if($option['enabled']) bg-emerald-500/5 border-emerald-500/20 @else bg-slate-800/40 border-slate-700/40 opacity-75 @endif">
+                    <div class="mt-0.5 flex-shrink-0">
+                        @if($option['enabled'])
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        @else
+                        <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        @endif
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium {{ $option['enabled'] ? 'text-slate-200' : 'text-slate-500' }}">
+                            {{ __('scans.module_'.$option['key']) }}
+                        </p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ __('scans.module_'.$option['key'].'_desc') }}</p>
+                        @if(!$option['enabled'])
+                        <a href="{{ route('plans.index') }}" class="inline-flex items-center gap-1 text-xs text-amber-400/80 hover:text-amber-300 transition mt-1">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            {{ __('scans.module_locked') }}
+                        </a>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         @if($errors->any())
         <div class="mb-4 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
             <ul class="list-disc list-inside space-y-0.5">

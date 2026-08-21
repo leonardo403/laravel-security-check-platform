@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="mb-8">
     <h1 class="text-2xl font-bold text-white">{{ __('plans.plans') }}</h1>
     @if($currentPlan)

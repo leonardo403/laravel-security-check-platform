@@ -77,13 +77,32 @@
     </div>
     <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
         <span class="text-xs text-slate-500 uppercase tracking-wider font-medium">{{ __('scans.dependencies') }}</span>
-        <p class="text-3xl font-bold text-white mt-1">{{ $scan->result->dependencies['total'] ?? '-' }}</p>
+        <p class="text-3xl font-bold text-white mt-1">{{ empty($scan->result->dependencies['skipped']) ? ($scan->result->dependencies['total'] ?? '-') : '-' }}</p>
     </div>
     <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
         <span class="text-xs text-slate-500 uppercase tracking-wider font-medium">{{ __('scans.outdated') }}</span>
-        <p class="text-3xl font-bold text-amber-400 mt-1">{{ $scan->result->dependencies['outdated'] ?? '-' }}</p>
+        <p class="text-3xl font-bold text-amber-400 mt-1">{{ empty($scan->result->dependencies['skipped']) ? ($scan->result->dependencies['outdated'] ?? '-') : '-' }}</p>
     </div>
 </div>
+
+@php
+    $scanModules = is_array($scan->modules) ? $scan->modules : [];
+    $skippedModules = collect(\App\Services\Scanner\ScanModule::cases())
+        ->reject(fn (\App\Services\Scanner\ScanModule $module) => in_array($module->value, $scanModules, true));
+@endphp
+@if($skippedModules->isNotEmpty())
+<div class="mb-6 px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700/50 flex items-center justify-between gap-4">
+    <div class="min-w-0">
+        <p class="text-sm font-medium text-slate-300">{{ __('scans.skipped_modules_title') }}</p>
+        <p class="text-xs text-slate-500 mt-0.5 truncate">
+            {{ __('scans.skipped_modules_list', ['modules' => $skippedModules->map(fn ($module) => __('scans.module_'.$module->value))->implode(', ')]) }}
+        </p>
+    </div>
+    <a href="{{ route('plans.index') }}" class="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition text-sm font-medium whitespace-nowrap border border-amber-500/20 flex-shrink-0">
+        {{ __('scans.upgrade') }}
+    </a>
+</div>
+@endif
 
 @if(!empty($scan->result->vulnerabilities))
 <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 mb-6 backdrop-blur-sm">

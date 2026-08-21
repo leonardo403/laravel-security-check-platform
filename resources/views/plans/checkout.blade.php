@@ -54,6 +54,7 @@
 
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+
     const stripe = Stripe('{{ $stripeKey }}');
     const clientSecret = '{{ $clientSecret }}';
     const returnUrl = '{{ route('subscription.confirm') }}';

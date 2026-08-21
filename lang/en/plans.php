@@ -35,7 +35,7 @@ return [
     'features_ci_cd_integration' => 'CI/CD integration',
     'plan_unavailable' => 'This plan is no longer available.',
     'already_subscribed' => 'You\'re already subscribed to the :plan plan.',
-    'stripe_not_configured' => 'Stripe payments aren\'t configured yet. Set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in your .env file.',
+    'stripe_not_configured' => 'Stripe payments aren\'t configured yet.',
     'payment_not_found' => 'Payment not found.',
     'payment_not_located' => 'Payment not found for your account.',
     'payment_not_confirmed' => 'The payment wasn\'t confirmed. Please try again.',

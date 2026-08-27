@@ -17,7 +17,6 @@ class PlanSeeder extends Seeder
                 'features' => json_encode([
                     'scan_security' => true,
                     'report_basic' => true,
-                    'email_notifications' => true,
                 ]),
                 'created_at' => now(),
                 'updated_at' => now(),

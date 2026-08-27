@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Scan;
+use App\Notifications\ScanNotification;
 use App\Services\Scanner\SecurityScanner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,6 +31,8 @@ class ProcessScan implements ShouldQueue
 
         $this->scan->update(['status' => 'processing', 'progress' => 5]);
 
+        $this->notifyUser(ScanNotification::STATUS_CREATED);
+
         try {
             $tempPath = $this->prepareScanSource();
 
@@ -45,6 +48,8 @@ class ProcessScan implements ShouldQueue
                 'completed_at' => now(),
             ]);
 
+            $this->notifyUser(ScanNotification::STATUS_COMPLETED, $result);
+
             Log::info("Scan completed successfully: {$this->scan->id}", [
                 'score' => $result->score,
             ]);
@@ -55,6 +60,9 @@ class ProcessScan implements ShouldQueue
             ]);
 
             $this->scan->update(['status' => 'failed']);
+
+            $this->notifyUser(ScanNotification::STATUS_FAILED, errorMessage: $e->getMessage());
+
             throw $e;
         } finally {
             if (isset($tempPath) && is_dir($tempPath)) {
@@ -145,5 +153,25 @@ class ProcessScan implements ShouldQueue
         }
 
         rmdir($path);
+    }
+
+    private function notifyUser(
+        string $status,
+        ?\App\Models\ScanResult $result = null,
+        ?string $errorMessage = null,
+    ): void {
+        $user = $this->scan->user;
+
+        if (! $user) {
+            return;
+        }
+
+        $plan = $user->activeSubscription()?->plan;
+
+        if (! $plan || ! ($plan->features['email_notifications'] ?? $plan->features['all_notifications'] ?? false)) {
+            return;
+        }
+
+        $user->notify(new ScanNotification($this->scan, $status, $result, $errorMessage));
     }
 }

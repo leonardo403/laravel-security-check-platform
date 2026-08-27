@@ -9,6 +9,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\Scanner\SecurityScanner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -89,7 +90,8 @@ class PlanScanModulesTest extends TestCase
 
         $user = $this->subscribeUser($plan);
 
-        $response = $this->actingAs($user)
+        $response = $this->withoutMiddleware(PreventRequestForgery::class)
+            ->actingAs($user)
             ->post(route('scans.store'), [
                 'repository_url' => 'https://github.com/user/repo.git',
             ]);

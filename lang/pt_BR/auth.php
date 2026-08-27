@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'welcome_tagline' => 'Uma experiência simples para realizar login, criar conta e acessar o dashboard do projeto.',
+    'welcome_tagline' => 'Acesse um ambiente seguro e protegido para analisar e monitorar vulnerabilidades nos seus projetos.',
     'go_to_dashboard' => 'Ir para o Dashboard',
     'login' => 'Entrar',
     'login_title' => 'Acesse sua conta',

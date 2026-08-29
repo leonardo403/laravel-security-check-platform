@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'nav' => 'Admin',
+    'settings_title' => 'Configurações',
+    'settings_subtitle' => 'Gerencie as configurações globais da plataforma.',
+    'plans' => 'Planos e assinaturas',
+    'general_settings' => 'Configurações gerais',
+    'platform_name' => 'Nome da plataforma',
+    'support_email' => 'E-mail de suporte',
+    'maintenance_mode' => 'Modo de manutenção',
+    'maintenance_mode_hint' => 'Temporariamente indisponível para todos, exceto administradores.',
+    'maintenance_title' => 'Manutenção em andamento',
+    'maintenance_message' => 'Estamos realizando uma manutenção programada na plataforma. Voltaremos em breve.',
+    'save_changes' => 'Salvar alterações',
+    'plans_title' => 'Planos e assinaturas',
+    'plans_subtitle' => 'Ajuste os preços, limites e recursos de cada plano.',
+    'subscriptions_count' => ':count assinaturas',
+    'is_active' => 'Ativo',
+    'plan_name' => 'Nome',
+    'price' => 'Preço (US$)',
+    'max_scans' => 'Scans/mês',
+    'features' => 'Recursos',
+    'settings_updated' => 'Configurações atualizadas com sucesso.',
+    'plan_updated' => 'Plano ":plan" atualizado.',
+];

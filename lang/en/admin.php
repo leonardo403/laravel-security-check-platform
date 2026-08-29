@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'nav' => 'Admin',
+    'settings_title' => 'Settings',
+    'settings_subtitle' => 'Manage the platform\'s global settings.',
+    'plans' => 'Plans & subscriptions',
+    'general_settings' => 'General settings',
+    'platform_name' => 'Platform name',
+    'support_email' => 'Support email',
+    'maintenance_mode' => 'Maintenance mode',
+    'maintenance_mode_hint' => 'Temporarily unavailable to everyone except administrators.',
+    'maintenance_title' => 'Scheduled maintenance',
+    'maintenance_message' => 'We are performing scheduled maintenance on the platform. We will be back shortly.',
+    'save_changes' => 'Save changes',
+    'plans_title' => 'Plans & subscriptions',
+    'plans_subtitle' => 'Adjust pricing, limits and features for each plan.',
+    'subscriptions_count' => ':count subscriptions',
+    'is_active' => 'Active',
+    'plan_name' => 'Name',
+    'price' => 'Price (US$)',
+    'max_scans' => 'Scans/month',
+    'features' => 'Features',
+    'settings_updated' => 'Settings updated successfully.',
+    'plan_updated' => 'Plan ":plan" updated.',
+];

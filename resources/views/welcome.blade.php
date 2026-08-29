@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('common.app_name') }}</title>
+    <title>{{ \App\Models\PlatformSetting::platformName() }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #020617; }
@@ -31,7 +31,7 @@
         </div>
 
         <h1 class="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
-            <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">{{ __('common.app_name') }}</span>
+            <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">{{ \App\Models\PlatformSetting::platformName() }}</span>
         </h1>
         <p class="text-lg text-slate-400 mb-10 leading-relaxed max-w-md mx-auto">
             {{ __('auth.welcome_tagline') }}

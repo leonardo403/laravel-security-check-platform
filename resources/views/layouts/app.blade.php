@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('common.app_name') }}</title>
+    <title>{{ \App\Models\PlatformSetting::platformName() }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #020617; }
@@ -25,12 +25,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
                         </div>
-                        <span class="text-lg font-bold text-white tracking-tight">{{ __('common.app_name') }}</span>
+                        <span class="text-lg font-bold text-white tracking-tight">{{ \App\Models\PlatformSetting::platformName() }}</span>
                     </a>
                     <div class="hidden sm:flex sm:items-center sm:ml-8 sm:space-x-1">
                         <a href="/dashboard" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">{{ __('common.dashboard') }}</a>
                         <a href="/scans" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">{{ __('common.scans') }}</a>
                         <a href="/plans" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">{{ __('common.plans') }}</a>
+                        @if(auth()->user()->isAdmin())
+                            <a href="/admin/settings" class="px-3 py-2 rounded-lg text-sm font-medium text-amber-300 hover:text-white hover:bg-amber-500/10 transition-all duration-200">{{ __('admin.nav') }}</a>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -105,7 +108,7 @@
 
     <footer class="border-t border-slate-800/50 mt-12">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-600">
-            {{ __('common.app_name') }} &copy; {{ date('Y') }}
+            {{ \App\Models\PlatformSetting::platformName() }} &copy; {{ date('Y') }}
         </div>
     </footer>
 </body>

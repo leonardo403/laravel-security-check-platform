@@ -151,7 +151,7 @@ class AdminTest extends TestCase
     {
         $this->seed();
 
-        $admin = User::where('email', 'admin@example.com')->firstOrFail();
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@example.com'))->firstOrFail();
         $this->assertTrue($admin->isAdmin());
 
         $this->assertSame('Security Platform', PlatformSetting::get(PlatformSetting::KEY_PLATFORM_NAME));

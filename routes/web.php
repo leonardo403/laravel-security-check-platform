@@ -8,10 +8,16 @@ use App\Http\Controllers\ScanController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\SetLocale;
+use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function () {
-    return view('welcome');
+    $plans = Schema::hasTable('subscription_plans')
+        ? SubscriptionPlan::where('is_active', true)->orderBy('price')->get()
+        : collect();
+
+    return view('welcome', compact('plans'));
 });
 
 Route::get('/locale/{locale}', function (string $locale) {

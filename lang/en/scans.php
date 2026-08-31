@@ -78,7 +78,7 @@ return [
     'scans_started' => ':count scans started successfully!',
     'scan_removed' => 'Scan removed successfully!',
     'scan_options' => 'Your plan\'s Scan Options',
-    'scan_options_desc' => 'Analyses included in the :plan plan',
+    'scan_options_desc' => 'Analyses included in the',
     'module_security' => 'Configuration Checks',
     'module_security_desc' => 'Environment security checks (.env, debug, HTTPS)',
     'module_dependencies' => 'Dependency Analysis',

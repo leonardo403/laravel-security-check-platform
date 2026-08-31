@@ -54,7 +54,7 @@
                 <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 {{ __('scans.scan_options') }}
             </h3>
-            <p class="text-xs text-slate-500 mb-3">{{ __('scans.scan_options_desc', ['plan' => $plan->name]) }}</p>
+            <p class="text-xs text-slate-500 mb-3">{{ __('scans.scan_options_desc') }}  {{ $planName = trans()->has('plans.name_'.$plan->slug) ? __('plans.name_'.$plan->slug) : $plan->name;}} </p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 @foreach($scanOptions as $option)
                 <div class="flex items-start gap-2.5 p-2.5 rounded-lg border @if($option['enabled']) bg-emerald-500/5 border-emerald-500/20 @else bg-slate-800/40 border-slate-700/40 opacity-75 @endif">

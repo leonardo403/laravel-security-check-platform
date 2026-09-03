@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Scan;
+use App\Models\ScanResult;
 use App\Notifications\ScanNotification;
 use App\Services\Scanner\SecurityScanner;
 use Illuminate\Bus\Queueable;
@@ -73,8 +74,8 @@ class ProcessScan implements ShouldQueue
 
     private function prepareScanSource(): string
     {
-        $tempPath = storage_path('app/temp/'.uniqid('repo_'));
-        mkdir($tempPath, 0755, true);
+        $tempPath = Storage::disk('temp')->path('repo_'.uniqid());
+        Storage::disk('temp')->makeDirectory($tempPath);
 
         switch ($this->scan->scan_type) {
             case 'repository':
@@ -157,7 +158,7 @@ class ProcessScan implements ShouldQueue
 
     private function notifyUser(
         string $status,
-        ?\App\Models\ScanResult $result = null,
+        ?ScanResult $result = null,
         ?string $errorMessage = null,
     ): void {
         $user = $this->scan->user;

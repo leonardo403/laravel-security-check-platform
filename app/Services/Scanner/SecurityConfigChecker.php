@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 class SecurityConfigChecker
 {
     private string $path;
+
     private array $checks = [];
 
     public function __construct(string $path)
@@ -34,6 +35,8 @@ class SecurityConfigChecker
         $this->checkConfigCache();
         $this->checkRouteCache();
         $this->checkErrorExposure();
+        $this->checkCsrf();
+        $this->checkHttpHeaders();
         $this->checkFilePermissions();
 
         return $this->checks;
@@ -51,8 +54,8 @@ class SecurityConfigChecker
 
     private function getEnvValue(string $key): ?string
     {
-        $envFile = $this->path . '/.env';
-        if (!File::exists($envFile)) {
+        $envFile = $this->path.'/.env';
+        if (! File::exists($envFile)) {
             return null;
         }
 
@@ -61,8 +64,9 @@ class SecurityConfigChecker
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (str_starts_with($line, $key . '=')) {
+            if (str_starts_with($line, $key.'=')) {
                 $value = substr($line, strlen($key) + 1);
+
                 return trim($value, '"\'');
             }
         }
@@ -72,16 +76,17 @@ class SecurityConfigChecker
 
     private function fileContains(string $filePath, string $pattern): bool
     {
-        if (!File::exists($filePath)) {
+        if (! File::exists($filePath)) {
             return false;
         }
+
         return str_contains(File::get($filePath), $pattern);
     }
 
     private function getConfigValue(string $configFile, string $key): mixed
     {
-        $filePath = $this->path . '/config/' . $configFile;
-        if (!File::exists($filePath)) {
+        $filePath = $this->path.'/config/'.$configFile;
+        if (! File::exists($filePath)) {
             return null;
         }
 
@@ -91,6 +96,24 @@ class SecurityConfigChecker
         }
         if (preg_match("/\"{$key}\"\s*=>\s*[\"']([^\"']+)[\"']/", $content, $matches)) {
             return $matches[1];
+        }
+
+        return null;
+    }
+
+    private function getConfigEnvDefault(string $configFile, string $key): ?string
+    {
+        $filePath = $this->path.'/config/'.$configFile;
+        if (! File::exists($filePath)) {
+            return null;
+        }
+
+        $content = File::get($filePath);
+        if (preg_match("/'{$key}'\s*=>\s*env\(\s*'([A-Z_]+)'\s*,\s*'([^']+)'\s*\)/", $content, $matches)) {
+            return $matches[2];
+        }
+        if (preg_match("/\"{$key}\"\s*=>\s*env\(\s*\"([A-Z_]+)\"\s*,\s*\"([^\"]+)\"\s*\)/", $content, $matches)) {
+            return $matches[2];
         }
 
         return null;
@@ -167,21 +190,21 @@ class SecurityConfigChecker
             $this->addCheck(
                 'APP_URL',
                 'warning',
-                'APP_URL aponta para localhost (' . $appUrl . '). Configure o domínio de produção.',
+                'APP_URL aponta para localhost ('.$appUrl.'). Configure o domínio de produção.',
                 'medium'
             );
-        } elseif (!str_starts_with($appUrl, 'https://')) {
+        } elseif (! str_starts_with($appUrl, 'https://')) {
             $this->addCheck(
                 'APP_URL',
                 'warning',
-                'APP_URL não usa HTTPS: ' . $appUrl . '. Use HTTPS em produção.',
+                'APP_URL não usa HTTPS: '.$appUrl.'. Use HTTPS em produção.',
                 'medium'
             );
         } else {
             $this->addCheck(
                 'APP_URL',
                 'pass',
-                'APP_URL está configurada: ' . $appUrl,
+                'APP_URL está configurada: '.$appUrl,
                 'info'
             );
         }
@@ -189,8 +212,8 @@ class SecurityConfigChecker
 
     private function checkDebugbarTelescope(): void
     {
-        $composerFile = $this->path . '/composer.json';
-        if (!File::exists($composerFile)) {
+        $composerFile = $this->path.'/composer.json';
+        if (! File::exists($composerFile)) {
             return;
         }
 
@@ -209,20 +232,20 @@ class SecurityConfigChecker
             }
         }
 
-        if (!empty($found)) {
+        if (! empty($found)) {
             $appDebug = $this->getEnvValue('APP_DEBUG');
             if ($appDebug === 'true') {
                 $this->addCheck(
                     'Debug Packages',
                     'fail',
-                    'Pacotes de debug instalados e APP_DEBUG=true: ' . implode(', ', $found) . '. Remova-os ou desative o debug em produção.',
+                    'Pacotes de debug instalados e APP_DEBUG=true: '.implode(', ', $found).'. Remova-os ou desative o debug em produção.',
                     'high'
                 );
             } else {
                 $this->addCheck(
                     'Debug Packages',
                     'warning',
-                    'Pacotes de debug instalados: ' . implode(', ', $found) . '. Considere removê-los em produção.',
+                    'Pacotes de debug instalados: '.implode(', ', $found).'. Considere removê-los em produção.',
                     'medium'
                 );
             }
@@ -244,7 +267,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Queue Driver',
                 'warning',
-                'QUEUE_CONNECTION="' . $driver . '". Em produção, use redis, sqs ou database.',
+                'QUEUE_CONNECTION="'.$driver.'". Em produção, use redis, sqs ou database.',
                 'medium'
             );
         } elseif (empty($driver)) {
@@ -258,7 +281,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Queue Driver',
                 'pass',
-                'QUEUE_CONNECTION="' . $driver . '".',
+                'QUEUE_CONNECTION="'.$driver.'".',
                 'info'
             );
         }
@@ -272,7 +295,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Cache Driver',
                 'warning',
-                'CACHE_DRIVER="' . $driver . '". Em produção, use redis ou memcached.',
+                'CACHE_DRIVER="'.$driver.'". Em produção, use redis ou memcached.',
                 'medium'
             );
         } elseif (empty($driver)) {
@@ -286,7 +309,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Cache Driver',
                 'pass',
-                'Cache configurado com "' . $driver . '".',
+                'Cache configurado com "'.$driver.'".',
                 'info'
             );
         }
@@ -321,7 +344,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Session Driver',
                 'pass',
-                'SESSION_DRIVER="' . $driver . '".',
+                'SESSION_DRIVER="'.$driver.'".',
                 'info'
             );
         }
@@ -335,7 +358,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Mail Driver',
                 'warning',
-                'MAIL_MAILER="' . $driver . '". Em produção, use ses, mailgun ou smtp autenticado.',
+                'MAIL_MAILER="'.$driver.'". Em produção, use ses, mailgun ou smtp autenticado.',
                 'medium'
             );
         } elseif (empty($driver)) {
@@ -349,7 +372,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Mail Driver',
                 'pass',
-                'MAIL_MAILER="' . $driver . '".',
+                'MAIL_MAILER="'.$driver.'".',
                 'info'
             );
         }
@@ -357,8 +380,8 @@ class SecurityConfigChecker
 
     private function checkTrustedProxies(): void
     {
-        $middlewareFile = $this->path . '/app/Http/Kernel.php';
-        $bootstrapApp = $this->path . '/bootstrap/app.php';
+        $middlewareFile = $this->path.'/app/Http/Kernel.php';
+        $bootstrapApp = $this->path.'/bootstrap/app.php';
         $trustedProxies = false;
 
         if (File::exists($middlewareFile)) {
@@ -366,14 +389,14 @@ class SecurityConfigChecker
             $trustedProxies = str_contains($content, 'TrustProxies') || str_contains($content, 'trustedProxy');
         }
 
-        if (!$trustedProxies && File::exists($bootstrapApp)) {
+        if (! $trustedProxies && File::exists($bootstrapApp)) {
             $content = File::get($bootstrapApp);
             $trustedProxies = str_contains($content, 'TrustProxies');
         }
 
         $envValue = $this->getEnvValue('TRUSTED_PROXIES');
 
-        if (!$trustedProxies && empty($envValue)) {
+        if (! $trustedProxies && empty($envValue)) {
             $this->addCheck(
                 'Trusted Proxies',
                 'warning',
@@ -392,15 +415,16 @@ class SecurityConfigChecker
 
     private function checkCors(): void
     {
-        $corsConfig = $this->path . '/config/cors.php';
+        $corsConfig = $this->path.'/config/cors.php';
 
-        if (!File::exists($corsConfig)) {
+        if (! File::exists($corsConfig)) {
             $this->addCheck(
                 'CORS',
                 'pass',
                 'Arquivo de configuração CORS não encontrado (usa padrão seguro).',
                 'info'
             );
+
             return;
         }
 
@@ -440,7 +464,7 @@ class SecurityConfigChecker
                 $this->addCheck(
                     'Logging',
                     'pass',
-                    'LOG_CHANNEL="' . ($logChannel ?: 'stack') . '".',
+                    'LOG_CHANNEL="'.($logChannel ?: 'stack').'".',
                     'info'
                 );
             }
@@ -455,7 +479,7 @@ class SecurityConfigChecker
             $this->addCheck(
                 'Logging',
                 'pass',
-                'LOG_CHANNEL="' . $logChannel . '".',
+                'LOG_CHANNEL="'.$logChannel.'".',
                 'info'
             );
         }
@@ -474,21 +498,21 @@ class SecurityConfigChecker
             '/.env.production',
         ];
 
-        $publicPath = $this->path . '/public';
+        $publicPath = $this->path.'/public';
         $exposed = [];
 
         foreach ($sensitiveFiles as $file) {
-            $fullPath = $publicPath . $file;
+            $fullPath = $publicPath.$file;
             if (File::exists($fullPath)) {
                 $exposed[] = basename($file);
             }
         }
 
-        if (!empty($exposed)) {
+        if (! empty($exposed)) {
             $this->addCheck(
                 'Public Directories',
                 'fail',
-                'Arquivos sensíveis acessíveis publicamente: ' . implode(', ', $exposed) . '. Remova-os do diretório public.',
+                'Arquivos sensíveis acessíveis publicamente: '.implode(', ', $exposed).'. Remova-os do diretório public.',
                 'high'
             );
         } else {
@@ -503,7 +527,7 @@ class SecurityConfigChecker
 
     private function checkComposerAutoload(): void
     {
-        $autoloadFile = $this->path . '/vendor/composer/autoload_classmap.php';
+        $autoloadFile = $this->path.'/vendor/composer/autoload_classmap.php';
 
         if (File::exists($autoloadFile)) {
             $size = File::size($autoloadFile);
@@ -534,7 +558,7 @@ class SecurityConfigChecker
 
     private function checkConfigCache(): void
     {
-        $cacheFile = $this->path . '/bootstrap/cache/config.php';
+        $cacheFile = $this->path.'/bootstrap/cache/config.php';
 
         if (File::exists($cacheFile)) {
             $this->addCheck(
@@ -555,11 +579,11 @@ class SecurityConfigChecker
 
     private function checkRouteCache(): void
     {
-        $cacheFile = $this->path . '/bootstrap/cache/routes-v7.php';
+        $cacheFile = $this->path.'/bootstrap/cache/routes-v7.php';
 
-        if (!File::exists($cacheFile)) {
-            $files = glob($this->path . '/bootstrap/cache/routes-*.php');
-            $cacheFile = !empty($files) ? $files[0] : null;
+        if (! File::exists($cacheFile)) {
+            $files = glob($this->path.'/bootstrap/cache/routes-*.php');
+            $cacheFile = ! empty($files) ? $files[0] : null;
         }
 
         if ($cacheFile && File::exists($cacheFile)) {
@@ -582,8 +606,8 @@ class SecurityConfigChecker
     private function checkErrorExposure(): void
     {
         $appDebug = $this->getEnvValue('APP_DEBUG');
-        $exceptionHandler = $this->path . '/app/Exceptions/Handler.php';
-        $bootstrapApp = $this->path . '/bootstrap/app.php';
+        $exceptionHandler = $this->path.'/app/Exceptions/Handler.php';
+        $bootstrapApp = $this->path.'/bootstrap/app.php';
 
         $customHandler = false;
 
@@ -592,7 +616,7 @@ class SecurityConfigChecker
             $customHandler = str_contains($content, 'render') || str_contains($content, 'report');
         }
 
-        if (!$customHandler && File::exists($bootstrapApp)) {
+        if (! $customHandler && File::exists($bootstrapApp)) {
             $content = File::get($bootstrapApp);
             $customHandler = str_contains($content, 'withExceptions');
         }
@@ -621,6 +645,120 @@ class SecurityConfigChecker
         }
     }
 
+    private function checkCsrf(): void
+    {
+        $secureCookie = $this->getEnvValue('SESSION_SECURE_COOKIE');
+        $sameSite = $this->getEnvValue('SESSION_SAME_SITE') ?? $this->getConfigValue('session.php', 'same_site');
+        $sameSite = $sameSite ?? $this->getConfigEnvDefault('session.php', 'same_site');
+        $sameSite = $sameSite !== null ? strtolower($sameSite) : null;
+
+        $secure = $secureCookie === 'true';
+
+        if ($secure && in_array($sameSite, ['lax', 'strict'], true)) {
+            $this->addCheck(
+                'CSRF Protection',
+                'pass',
+                'Cookies de sessão seguras: SESSION_SECURE_COOKIE=true e SameSite='.$sameSite.'.',
+                'info'
+            );
+
+            return;
+        }
+
+        $problems = [];
+        if (! $secure) {
+            $problems[] = 'SESSION_SECURE_COOKIE não está definida como true';
+        }
+        if ($sameSite === null) {
+            $problems[] = 'SameSite não configurado';
+        } elseif ($sameSite === 'none') {
+            $problems[] = 'SameSite=None permite requisições cross-site (exige Secure quando combinado)';
+        } elseif (! in_array($sameSite, ['lax', 'strict'], true)) {
+            $problems[] = 'Valor inválido de SameSite: "'.$sameSite.'"';
+        }
+
+        $status = $secure ? 'warning' : 'fail';
+        $severity = $secure ? 'medium' : 'high';
+
+        $this->addCheck(
+            'CSRF Protection',
+            $status,
+            'Proteção CSRF/sessão comprometida: '.implode('; ', $problems).'.',
+            $severity
+        );
+    }
+
+    private function checkHttpHeaders(): void
+    {
+        $headers = [
+            'Strict-Transport-Security',
+            'X-Frame-Options',
+            'X-Content-Type-Options',
+            'Content-Security-Policy',
+            'Referrer-Policy',
+            'Permissions-Policy',
+            'X-XSS-Protection',
+        ];
+
+        $bootstrapApp = $this->path.'/bootstrap/app.php';
+        $kernel = $this->path.'/app/Http/Kernel.php';
+        $middlewareFile = $this->path.'/app/Http/Middleware/SecurityHeaders.php';
+
+        $registered = false;
+        if (File::exists($bootstrapApp)) {
+            $registered = str_contains(File::get($bootstrapApp), 'SecurityHeaders');
+        }
+        if (! $registered && File::exists($kernel)) {
+            $registered = str_contains(File::get($kernel), 'SecurityHeaders');
+        }
+
+        if (! $registered) {
+            $this->addCheck(
+                'HTTP Security Headers',
+                'fail',
+                'Nenhum middleware de Security Headers detectado. Adicione um middleware (ex.: SecurityHeaders) com os headers HSTS, X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy, Permissions-Policy e X-XSS-Protection.',
+                'high'
+            );
+
+            return;
+        }
+
+        $present = [];
+        if (File::exists($middlewareFile)) {
+            $content = File::get($middlewareFile);
+            foreach ($headers as $header) {
+                if (str_contains($content, $header)) {
+                    $present[] = $header;
+                }
+            }
+        }
+
+        $missing = array_values(array_diff($headers, $present));
+
+        if (empty($missing)) {
+            $this->addCheck(
+                'HTTP Security Headers',
+                'pass',
+                'Middleware de Security Headers configurado com todos os headers recomendados.',
+                'info'
+            );
+        } elseif (count($present) === 0) {
+            $this->addCheck(
+                'HTTP Security Headers',
+                'fail',
+                'Middleware SecurityHeaders registrado, mas nenhum header de segurança definido no arquivo.',
+                'high'
+            );
+        } else {
+            $this->addCheck(
+                'HTTP Security Headers',
+                'warning',
+                'Middleware SecurityHeaders registrado, mas headers ausentes: '.implode(', ', $missing).'.',
+                'medium'
+            );
+        }
+    }
+
     private function checkFilePermissions(): void
     {
         $issues = [];
@@ -631,22 +769,22 @@ class SecurityConfigChecker
         ];
 
         foreach ($writableDirs as $dir) {
-            $fullPath = $this->path . $dir;
+            $fullPath = $this->path.$dir;
             if (File::exists($fullPath)) {
                 $perms = fileperms($fullPath);
                 $octal = substr(sprintf('%o', $perms), -4);
 
                 if (substr($octal, -2) !== '00' && substr($octal, -2) !== '04' && substr($octal, -2) !== '05') {
-                    $issues[] = $dir . ' (' . $octal . ')';
+                    $issues[] = $dir.' ('.$octal.')';
                 }
             }
         }
 
-        if (!empty($issues)) {
+        if (! empty($issues)) {
             $this->addCheck(
                 'File Permissions',
                 'warning',
-                'Permissões de diretório potencialmente inseguras: ' . implode(', ', $issues) . '. Use 755 ou 775.',
+                'Permissões de diretório potencialmente inseguras: '.implode(', ', $issues).'. Use 755 ou 775.',
                 'medium'
             );
         } else {

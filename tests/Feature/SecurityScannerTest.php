@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Scan;
 use App\Models\User;
+use App\Services\Scanner\SecurityConfigChecker;
 use App\Services\Scanner\SecurityScanner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -107,6 +108,80 @@ class SecurityScannerTest extends TestCase
 
         $this->assertSame(0, $result->dependencies['total']);
         $this->assertSame(0, $result->dependencies['vulnerable']);
+    }
+
+    public function test_csrf_check_fails_when_secure_session_cookie_not_set(): void
+    {
+        File::put($this->projectPath.'/.env', implode("\n", [
+            'SESSION_SECURE_COOKIE=false',
+        ]));
+
+        $checks = (new SecurityConfigChecker($this->projectPath))->run();
+
+        $csrf = collect($checks)->firstWhere('name', 'CSRF Protection');
+        $this->assertNotNull($csrf);
+        $this->assertSame('fail', $csrf['status']);
+    }
+
+    public function test_csrf_check_passes_with_secure_session_configuration(): void
+    {
+        File::put($this->projectPath.'/.env', implode("\n", [
+            'SESSION_SECURE_COOKIE=true',
+            'SESSION_SAME_SITE=lax',
+        ]));
+
+        $checks = (new SecurityConfigChecker($this->projectPath))->run();
+
+        $csrf = collect($checks)->firstWhere('name', 'CSRF Protection');
+        $this->assertNotNull($csrf);
+        $this->assertSame('pass', $csrf['status']);
+    }
+
+    public function test_http_headers_check_fails_without_security_headers_middleware(): void
+    {
+        $checks = (new SecurityConfigChecker($this->projectPath))->run();
+
+        $headers = collect($checks)->firstWhere('name', 'HTTP Security Headers');
+        $this->assertNotNull($headers);
+        $this->assertSame('fail', $headers['status']);
+    }
+
+    public function test_http_headers_check_passes_with_full_security_headers_middleware(): void
+    {
+        File::ensureDirectoryExists($this->projectPath.'/bootstrap');
+        File::ensureDirectoryExists($this->projectPath.'/app/Http/Middleware');
+
+        File::put($this->projectPath.'/bootstrap/app.php', <<<'PHP'
+<?php
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(SecurityHeaders::class);
+    })->create();
+PHP);
+
+        File::put($this->projectPath.'/app/Http/Middleware/SecurityHeaders.php', <<<'PHP'
+<?php
+
+public function handle($request, $next)
+{
+    $response = $next($request);
+    $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+    $response->headers->set('X-Content-Type-Options', 'nosniff');
+    $response->headers->set('Content-Security-Policy', "default-src 'self'");
+    $response->headers->set('Referrer-Policy', 'no-referrer');
+    $response->headers->set('Permissions-Policy', 'camera=(), microphone=()');
+    $response->headers->set('X-XSS-Protection', '1; mode=block');
+    return $response;
+}
+PHP);
+
+        $checks = (new SecurityConfigChecker($this->projectPath))->run();
+
+        $headers = collect($checks)->firstWhere('name', 'HTTP Security Headers');
+        $this->assertNotNull($headers);
+        $this->assertSame('pass', $headers['status']);
     }
 
     private function createScan(): Scan

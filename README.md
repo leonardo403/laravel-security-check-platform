@@ -1,4 +1,4 @@
-<img width="500" height="500" src="art/SecurityScan.png" 
+<img width="500" height="500" src="art/SecurityScan_sem_Github.png" 
 alt="Laravel Security Check" />
 # Laravel Security Check
 

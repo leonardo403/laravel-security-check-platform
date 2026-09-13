@@ -41,7 +41,6 @@ return [
         'temp' => [
             'driver' => 'local',
             'root' => storage_path('app/temp'),
-            'serve' => true,
             'throw' => false,
             'report' => false,
         ],

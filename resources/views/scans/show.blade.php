@@ -246,6 +246,16 @@
     <h2 class="text-lg font-bold text-white mb-2">{{ __('scans.summary') }}</h2>
     <p class="text-slate-400 text-sm leading-relaxed">{{ $scan->result->summary }}</p>
 </div>
+@elseif($scan->status === 'failed')
+<div class="bg-slate-900/60 border border-rose-500/20 rounded-2xl p-16 text-center backdrop-blur-sm">
+    <div class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-linecap="round"></circle>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6"></path>
+        </svg>
+    </div>
+    <p class="text-rose-400 text-lg">{{ __('scans.status_failed') }}</p>
+</div>
 @else
 <div class="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-16 text-center backdrop-blur-sm" id="waiting-container">
     <div class="w-16 h-16 rounded-2xl bg-slate-800/50 flex items-center justify-center mx-auto mb-4">

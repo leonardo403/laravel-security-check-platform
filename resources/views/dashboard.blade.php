@@ -1,6 +1,38 @@
 @extends('layouts.app')
 
 @section('content')
+@if($stats['plan'] && $stats['plan']->isTrial())
+<div class="mb-6 px-4 py-3 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div>
+            <p class="font-medium text-teal-300 text-sm">{{ __('dashboard.trial_notice') }}</p>
+            <p class="text-xs text-teal-400/70">{{ __('dashboard.trial_notice_desc') }}</p>
+        </div>
+    </div>
+    <a href="{{ route('plans.index') }}" class="px-4 py-2 rounded-lg bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 transition text-sm font-medium whitespace-nowrap border border-teal-500/20">
+        {{ __('dashboard.subscribe_plan') }}
+    </a>
+</div>
+@elseif($stats['trial_used'] && ! $stats['plan'])
+<div class="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <p class="font-medium text-amber-300 text-sm">{{ __('dashboard.trial_used_notice') }}</p>
+            <p class="text-xs text-amber-400/70">{{ __('dashboard.trial_used_notice_desc') }}</p>
+        </div>
+    </div>
+    <a href="{{ route('plans.index') }}" class="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition text-sm font-medium whitespace-nowrap border border-amber-500/20">
+        {{ __('dashboard.subscribe_plan') }}
+    </a>
+</div>
+@endif
+
 @if($stats['subscription_expired'])
 <div class="mb-6 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
     <div class="flex items-center gap-3">

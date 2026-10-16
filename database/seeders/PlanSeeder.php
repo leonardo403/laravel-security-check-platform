@@ -11,6 +11,17 @@ class PlanSeeder extends Seeder
     {
         $plans = [
             [
+                'name' => 'Teste Grátis',
+                'slug' => 'trial',
+                'price' => 0.00,
+                'max_scans_per_month' => 1,
+                'is_trial' => true,
+                'features' => [
+                    'scan_security' => true,
+                    'report_basic' => true,
+                ],
+            ],
+            [
                 'name' => 'Básico',
                 'slug' => 'basic',
                 'price' => 5.00,

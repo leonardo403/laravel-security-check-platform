@@ -25,18 +25,24 @@ class SubscriptionPlan extends Model
     ];
 
     protected $fillable = [
-        'name', 'slug', 'price', 'max_scans_per_month', 'features', 'is_active',
+        'name', 'slug', 'price', 'max_scans_per_month', 'features', 'is_active', 'is_trial',
     ];
 
     protected $casts = [
         'features' => 'array',
         'price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_trial' => 'boolean',
     ];
 
     public function isActive(): bool
     {
         return $this->is_active;
+    }
+
+    public function isTrial(): bool
+    {
+        return (bool) $this->is_trial;
     }
 
     public function scanModules(): array

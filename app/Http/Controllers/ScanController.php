@@ -116,6 +116,11 @@ class ScanController extends Controller
             Log::info("Scan created: {$scan->id}", ['type' => $scan->scan_type]);
         }
 
+        if ($plan->isTrial()) {
+            $user->consumeTrial();
+            $warning ??= __('plans.trial_consumed');
+        }
+
         if (count($scans) === 1) {
             $response = redirect()
                 ->route('scans.show', $scans[0])

@@ -14,6 +14,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $plan = $user->activeSubscription()?->plan;
+        $subscription = $user->subscription;
 
         $scansThisMonth = $user->scans()
             ->whereMonth('created_at', now()->month)
@@ -37,7 +38,8 @@ class DashboardController extends Controller
                 ->groupBy('status')
                 ->pluck('count', 'status'),
             'plan' => $plan,
-            'subscription_expired' => (bool) ($user->subscription?->isExpired() ?? false),
+            'trial_used' => $user->hasUsedTrial(),
+            'subscription_expired' => (bool) ($subscription?->isExpired() && ! $subscription->plan?->isTrial()),
             'scans_this_month' => $scansThisMonth,
             'scans_remaining' => $plan ? max(0, $plan->max_scans_per_month - $scansThisMonth) : 0,
             'max_scans_per_month' => $plan?->max_scans_per_month ?? 0,

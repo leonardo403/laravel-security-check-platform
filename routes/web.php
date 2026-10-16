@@ -51,6 +51,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('scans', ScanController::class);
     Route::get('/scans/{scan}/progress', [ScanController::class, 'progress'])->name('scans.progress');
 
+    Route::get('/trial', [PlansController::class, 'startTrial'])->name('trial.start');
+
     Route::get('/plans', [PlansController::class, 'index'])->name('plans.index');
     Route::get('/plans/{plan}', [PlansController::class, 'show'])->name('plans.show');
     Route::get('/plans/{plan}/checkout', [PlansController::class, 'checkout'])->name('plans.checkout');

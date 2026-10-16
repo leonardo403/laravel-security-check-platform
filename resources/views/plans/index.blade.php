@@ -16,25 +16,36 @@
 </div>
 @endif
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     @foreach($plans as $plan)
     @php
+        $isTrial = $plan->isTrial();
         $isCurrent = $currentPlan && $currentPlan->id === $plan->id;
         $isExpiredPlan = $expiredPlan && $expiredPlan->id === $plan->id;
-        $isMedium = $plan->slug === 'medium';
+        $isMedium = ! $isTrial && $plan->slug === 'medium';
         $planName = trans()->has('plans.name_'.$plan->slug) ? __('plans.name_'.$plan->slug) : $plan->name;
+        $trialActive = $isTrial && $isCurrent;
+        $trialBlocked = $isTrial && ! $trialActive && ($trialUsed || $currentPlan !== null);
     @endphp
     <div class="relative bg-slate-900/60 border rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl
         {{ $isMedium ? 'border-teal-500/30 shadow-lg shadow-teal-500/5' : 'border-slate-700/50 hover:border-slate-600/50' }}
         {{ $isCurrent ? 'ring-1 ring-emerald-500/30' : '' }}">
 
-        @if($isCurrent)
+        @if($trialActive)
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span class="inline-flex items-center px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-medium backdrop-blur-sm">{{ __('plans.trial_active') }}</span>
+            </div>
+        @elseif($isCurrent)
             <div class="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span class="inline-flex items-center px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-medium backdrop-blur-sm">{{ __('plans.your_plan') }}</span>
             </div>
         @elseif($isExpiredPlan)
             <div class="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span class="inline-flex items-center px-3 py-1 text-xs rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium backdrop-blur-sm">{{ __('plans.expired') }}</span>
+            </div>
+        @elseif($isTrial)
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span class="inline-flex items-center px-3 py-1 text-xs rounded-full bg-teal-500/20 text-teal-400 border border-teal-500/20 font-medium backdrop-blur-sm">{{ __('plans.trial_badge') }}</span>
             </div>
         @elseif($isMedium)
             <div class="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -44,8 +55,12 @@
 
         <h3 class="text-xl font-bold text-white mt-2">{{ $planName }}</h3>
         <div class="mt-4 mb-6">
-            <span class="text-4xl font-bold text-white">${{ number_format($plan->price, 2) }}</span>
-            <span class="text-sm text-slate-500">{{ __('plans.per_month') }}</span>
+            @if($isTrial)
+                <span class="text-4xl font-bold text-white">{{ __('plans.free') }}</span>
+            @else
+                <span class="text-4xl font-bold text-white">${{ number_format($plan->price, 2) }}</span>
+                <span class="text-sm text-slate-500">{{ __('plans.per_month') }}</span>
+            @endif
         </div>
 
         <ul class="space-y-3 mb-8">
@@ -53,7 +68,7 @@
                 <div class="w-5 h-5 rounded-full bg-teal-500/10 flex items-center justify-center flex-shrink-0">
                     <svg class="w-3 h-3 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                {{ __('plans.scans_per_month', ['count' => $plan->max_scans_per_month]) }}
+                {{ $isTrial ? __('plans.scans_trial') : __('plans.scans_per_month', ['count' => $plan->max_scans_per_month]) }}
             </li>
             @foreach($plan->features as $feature => $enabled)
                 @if($enabled)
@@ -67,7 +82,21 @@
             @endforeach
         </ul>
 
-        @if($isCurrent)
+        @if($trialActive)
+            <a href="{{ route('scans.create') }}"
+                class="block w-full text-center rounded-xl py-2.5 px-4 transition-all duration-300 text-sm font-semibold bg-gradient-to-r from-teal-500 to-teal-600 text-white hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/20">
+                {{ __('plans.trial_start_scan') }}
+            </a>
+        @elseif($trialBlocked)
+            <div class="w-full rounded-xl bg-slate-800/60 text-slate-500 border border-slate-700/50 py-2.5 px-4 text-center text-sm font-medium">
+                {{ $trialUsed ? __('plans.trial_used') : __('plans.trial_unavailable') }}
+            </div>
+        @elseif($isTrial)
+            <a href="{{ route('trial.start') }}"
+                class="block w-full text-center rounded-xl py-2.5 px-4 transition-all duration-300 text-sm font-semibold bg-gradient-to-r from-teal-500 to-teal-600 text-white hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/20">
+                {{ __('plans.trial_cta') }}
+            </a>
+        @elseif($isCurrent)
             <div class="w-full rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-2.5 px-4 text-center text-sm font-medium">
                 {{ __('plans.current_plan') }}
             </div>

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'trial_used_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,12 +30,27 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'trial_used_at' => 'datetime',
         ];
     }
 
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    public function hasUsedTrial(): bool
+    {
+        return $this->trial_used_at !== null;
+    }
+
+    public function consumeTrial(): void
+    {
+        $subscription = $this->activeSubscription();
+
+        $this->update(['trial_used_at' => now()]);
+
+        $subscription?->update(['status' => Subscription::STATUS_EXPIRED]);
     }
 
     public function sendPasswordResetNotification($token): void
